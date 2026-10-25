@@ -10,6 +10,8 @@ PMBus IR is an open, vendor-neutral intermediate representation for precisely de
 
 The project defines a canonical, machine-readable representation that can serve as a single source of truth for PMBus interface requirements and tooling.
 
+**PMBus IR uses YAML as its sole canonical document format. JSON is not a supported PMBus IR document format.**
+
 ## Why PMBus IR?
 
 PMBus specifications define protocol and command semantics, while product datasheets and engineering documents describe product-specific implementations in inconsistent forms. PMBus IR provides a normalized semantic layer between those sources and downstream engineering artifacts.
@@ -55,7 +57,7 @@ example-module.pmbus.yaml
 
 ## Design principles
 
-1. **Machine-readable first** — YAML/JSON is the source representation; human-readable documents are rendered views.
+1. **Machine-readable first** — YAML is the canonical source representation; human-readable documents are rendered views.
 2. **Vendor-neutral** — the core model must not depend on one manufacturer's datasheet conventions.
 3. **Semantic, not tabular** — describe meaning, constraints, state, and behavior rather than only command/register tables.
 4. **Loss-minimizing** — the model should preserve enough information to reconstruct the intended interface behavior without hidden assumptions.
