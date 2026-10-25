@@ -36,10 +36,13 @@ The initial model uses the following top-level domains:
 
 ```yaml
 ir_version: "0.1"
+document: {}
+source: {}
 device: {}
 standards: {}
 transport: {}
 addressing: {}
+data_formats: {}
 commands: {}
 telemetry: {}
 configuration: {}
@@ -48,13 +51,16 @@ faults: {}
 persistence: {}
 behavior: {}
 extensions: {}
+source_conflicts: {}
 ```
+
+`document` and `source` provide provenance for reference implementations. `data_formats` allows reusable device-level encoding definitions, while `source_conflicts` preserves contradictions in source material instead of silently normalizing them away.
 
 Not every domain must be populated by every device. Required and optional fields will be frozen only after reference implementations expose enough real-world variation.
 
 ## Canonical representation
 
-YAML is the preferred authoring form for readability. JSON is an equivalent machine representation.
+PMBus IR uses YAML as its sole canonical document format. JSON is not a supported PMBus IR document format.
 
 The IR should avoid encoding the layout of a specific vendor datasheet. Information should instead be grouped by semantic meaning.
 
