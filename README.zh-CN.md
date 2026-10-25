@@ -4,6 +4,8 @@
 
 <div align="right"><a href="./README.md">English</a> | <strong>简体中文</strong></div>
 
+<br>
+
 PMBus IR 是一种开放、厂商无关的中间表示（Intermediate Representation），用于精确描述一款电源设备实际实现的 PMBus 接口。
 
 本项目定义一种规范化、机器可读的数据表示，可作为 PMBus 接口需求与相关工具的单一事实来源（single source of truth）。
