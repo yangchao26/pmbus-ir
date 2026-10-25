@@ -2,25 +2,24 @@
 
 ## Purpose
 
-Semantic validation checks whether a PMBus IR document is internally consistent after it has passed structural JSON Schema validation.
+Semantic validation checks whether a PMBus IR document is internally consistent after structural JSON Schema validation.
 
-It is intentionally separate from the PMBus specification itself. The validator does not embed normative definitions of PMBus commands and does not attempt to decide whether a device implementation complies with the PMBus standard.
+It is intentionally separate from the PMBus specification itself. The validator does not embed normative definitions of PMBus commands and does not decide whether a device implementation complies with the PMBus standard.
 
-The v0.1 implementation is in:
+The current implementation is split across:
 
 ```text
 tools/semantic_validator.py
+tools/data_semantics.py
 ```
 
-The combined schema + semantic validation entry point is:
+The combined entry point is:
 
 ```text
 tools/validate.py
 ```
 
 ## Validation model
-
-Validation is performed in two layers:
 
 ```text
 PMBus IR YAML
@@ -34,7 +33,7 @@ PMBus IR YAML
             - cross-object references
             - uniqueness
             - data-format compatibility
-            - internal consistency
+            - content/framing length consistency
             - cross-command relationships
 ```
 
@@ -62,22 +61,9 @@ Every `commands.*.data.format_ref` must refer to an entry under the document-lev
 
 Command references must resolve to a canonical command identifier or declared alias.
 
-v0.1 validates:
+v0.1 validates persistence references, relation references, data-format exponent-source commands, and document-level `command` / `*_command` references in the normative semantic domains.
 
-- command-level persistence references such as `commit_command` and `restore_command`;
-- `constraints[].other_command` relation references;
-- data-format exponent source commands;
-- document-level `command` and `*_command` references under:
-  - `standards`;
-  - `addressing`;
-  - `telemetry`;
-  - `configuration`;
-  - `status`;
-  - `faults`;
-  - `persistence`;
-  - `behavior`.
-
-`extensions` and `source_conflicts` are deliberately excluded. They may preserve names mentioned by source material even when those names are not part of the implemented normative `commands` map.
+`extensions` and `source_conflicts` remain excluded because they may preserve source terminology that is not part of the implemented command map.
 
 ## Scalar and relation rules
 
@@ -87,72 +73,40 @@ For scalar ranges, `min` must not be greater than `max`.
 
 ### `default_outside_range`
 
-When a command has both a numeric scalar range and a single numeric default, the default must lie inside the declared range.
-
-Variant-dependent defaults under `default.cases` are not evaluated in v0.1.
+A single numeric default must lie inside the declared scalar range.
 
 ### `constraint_unit_mismatch`
 
-A structured relation between two commands with different engineering units is rejected when no explicit relation unit is provided.
-
-This check does not perform unit conversion in v0.1.
+A relation between commands with different engineering units requires an explicit relation unit.
 
 ### `default_violates_constraint`
 
-When both related commands have single numeric defaults, a structured relation constraint is evaluated against those defaults.
+When both commands have single numeric defaults, structured relation constraints are evaluated against those defaults.
 
-For example:
-
-```yaml
-constraints:
-  - kind: relation
-    operator: ge
-    other_command: VIN_OFF
-    offset: 2.0
-    unit: V
-```
-
-means:
-
-```text
-VIN_ON >= VIN_OFF + 2.0 V
-```
-
-Supported relation operators are:
-
-```text
-gt
-ge
-lt
-le
-eq
-ne
-```
-
-## Data IR format rules
+## Numeric Data IR rules
 
 The detailed model is defined in `spec/data-model.md`.
 
 ### `format_wire_width_mismatch`
 
-A known numeric format descriptor must use its defined wire width. Data IR v0.1 recognizes:
+Known numeric formats must use their defined wire width:
 
 ```text
-linear11    -> 2 bytes
-vout_linear -> 2 bytes
+linear11     -> 2 bytes
+vout_linear  -> 2 bytes
 ```
 
 ### `format_payload_width_mismatch`
 
-When a command references a reusable format with a declared `wire_bytes`, or uses a known inline numeric format, `commands.*.data.bytes` must match that width.
+A command's `data.bytes` must match the selected numeric representation width.
 
 ### `format_kind_mismatch`
 
-`linear11` and `vout_linear` are scalar numeric formats. A command cannot select one of these formats while declaring a non-scalar `data.kind`.
+`linear11` and `vout_linear` require `data.kind: scalar`.
 
 ### `invalid_fixed_exponent`
 
-A declared fixed exponent for the v0.1 linear formats must fit the signed 5-bit exponent range:
+A fixed exponent must fit the signed five-bit range:
 
 ```text
 -16 .. 15
@@ -160,51 +114,47 @@ A declared fixed exponent for the v0.1 linear formats must fit the signed 5-bit 
 
 ### `linear11_representation_mismatch`
 
-When the expanded LINEAR11 representation is explicitly written, the validator requires the expected signed 11-bit mantissa and signed 5-bit exponent representation.
-
-The compact form:
-
-```yaml
-format:
-  type: linear11
-```
-
-already carries that representation meaning and does not require those fields to be repeated.
+Expanded LINEAR11 representation fields must agree with the signed 11-bit mantissa / signed five-bit exponent model.
 
 ### `vout_linear_representation_mismatch`
 
-When the expanded VOUT Linear representation is explicitly written, the mantissa must be represented as unsigned 16-bit data.
+Expanded VOUT Linear representation fields must agree with the unsigned 16-bit mantissa model.
 
 ### `encoding_resolution_mismatch`
 
-If a fixed exponent is known, the encoding LSB is:
+When a fixed exponent is known:
 
 ```text
-2 ^ fixed_exponent
+encoding_resolution == 2 ^ fixed_exponent
 ```
 
-A declared `encoding_resolution` must equal that value.
+This applies to command-level and reusable format-level canonical `encoding_resolution` fields.
 
-The same check is applied to reusable format-level source fields such as the QODN217A0B reference descriptor's `resolution_v`.
+### `legacy_resolution_field` — warning
 
-### `ambiguous_resolution_semantics` — warning
+The earlier experimental fields:
 
-The early reference model used a generic `resolution` field before the distinction between encoding LSB and source-published device resolution was made explicit.
+```yaml
+resolution:
+resolution_v:
+```
 
-When that legacy field materially differs from the fixed-exponent encoding LSB, the validator emits a warning rather than an error.
-
-New documents should use:
+are ambiguous. New/reference documents must use explicit canonical fields:
 
 ```yaml
 encoding_resolution:
 published_resolution:
 ```
 
-This preserves source-derived values that do not equal the wire encoding LSB instead of silently rewriting them.
+Legacy fields remain readable for compatibility but produce a warning through `tools/data_semantics.py`.
+
+### `ambiguous_resolution_semantics` — legacy warning
+
+The original semantic validator may additionally report this warning when a legacy `resolution` value materially differs from the encoding LSB. Canonical Reference IR documents should no longer contain the legacy field.
 
 ### `step_not_encoding_multiple`
 
-When a fixed exponent is known, a declared programming `step` must be an integer multiple of the encoding LSB.
+A programming `step` must be an integer multiple of the fixed-exponent encoding LSB.
 
 ## Bit-field rules
 
@@ -214,29 +164,75 @@ A `bit_field` must declare at least one byte.
 
 ### `invalid_bit_index`
 
-Bit keys must represent non-negative integer bit positions.
+Bit keys must represent non-negative integer positions.
 
 ### `bit_out_of_range`
 
-For `bytes: N`, valid bit positions are:
+For `data.bytes: N`, valid bit positions are:
 
 ```text
 0 .. (8 * N - 1)
 ```
 
-## String and block rules
+## Canonical block length rules
 
-### `invalid_block_length`
+For all block transactions, `data.bytes` means semantic content bytes. It excludes the SMBus count prefix, PEC, address, command code, and ACK/NACK framing.
 
-A command using `read_block` or `write_block` must declare a positive data byte count.
+A canonical block command declares:
+
+```yaml
+data:
+  bytes: 4
+  block:
+    content_bytes: 4
+    count_prefix_bytes: 1
+    transaction_payload_bytes: 5
+```
+
+### `missing_block_metadata`
+
+Every `read_block` or `write_block` command must declare `data.block`.
+
+### `block_metadata_without_block_transaction`
+
+`data.block` is invalid unless the command transaction is `read_block` or `write_block`.
+
+### `block_content_length_mismatch`
+
+The semantic content length must satisfy:
+
+```text
+data.bytes == block.content_bytes
+```
+
+### `invalid_block_count_prefix`
+
+Data IR v0.1 models the SMBus block count prefix as exactly one byte:
+
+```text
+block.count_prefix_bytes == 1
+```
+
+### `block_transaction_payload_length_mismatch`
+
+The transaction payload length must satisfy:
+
+```text
+block.transaction_payload_bytes ==
+    block.content_bytes + block.count_prefix_bytes
+```
+
+The transaction payload length deliberately excludes PEC and bus framing.
+
+## String rules
 
 ### `invalid_string_length`
 
-String data must declare a positive byte count.
+String data must declare a positive semantic content length.
 
 ### `string_requires_block_transaction`
 
-String data must use block transaction semantics in Data IR v0.1.
+String data uses block transaction semantics in Data IR v0.1.
 
 ### `missing_string_encoding`
 
@@ -244,38 +240,40 @@ String data must declare an encoding.
 
 ### `string_default_too_long`
 
-A literal default string may not exceed the command's declared data byte count.
-
-The validator does not infer vendor-specific padding, terminators, or whether a vendor table includes the SMBus block-count byte unless that convention is explicitly represented.
+A literal default string may not exceed the declared semantic content length.
 
 ## Other data rules
 
 ### `none_data_has_payload`
 
-`data.kind: none` requires `bytes: 0`.
+`data.kind: none` requires `data.bytes: 0`.
+
+## QODN217A0B reference interpretation
+
+The public QODN217A0B quick-reference table lists `MFR_ID` as five data bytes while its default value is `OMPW`, a four-character string. The reference IR records four content bytes and one block count byte, and applies that same quick-table convention to the adjacent standard MFR block-string rows.
+
+`MFR_MOD_DATE_LOC_SN` is preserved as a source conflict: the detailed command text states read support for a 12-byte block, while the quick-reference table also reports `DATA BYTES = 12`. The Reference IR uses 12 semantic content bytes from the detailed description and explicitly records the quick-table counting ambiguity rather than silently converting it to 11.
 
 ## Error and warning format
 
-The CLI reports a stable severity, code, document path, and human-readable message.
+The CLI reports severity, stable code, document path, and human-readable message.
 
 Example:
 
 ```text
-ERROR unknown_format_ref $.commands.READ_VOUT.data.format_ref: format_ref 'missing' is not defined under data_formats.
-WARNING ambiguous_resolution_semantics $.commands.READ_IOUT.data.resolution: ...
+ERROR block_content_length_mismatch $.commands.MFR_ID.data.block.content_bytes: ...
+WARNING legacy_resolution_field $.commands.READ_IOUT.data.resolution: ...
 ```
-
-Stable codes are intended to support CI, editor integration, and future machine-readable output.
 
 ## CLI
 
-Install the current tool dependencies:
+Install dependencies:
 
 ```bash
 python -m pip install -r tools/requirements.txt
 ```
 
-Run structural and semantic validation together:
+Run structural and semantic validation:
 
 ```bash
 python tools/validate.py validate examples/reference/qodn217a0b.pmbus.yaml
@@ -287,32 +285,29 @@ Run semantic validation only:
 python tools/validate.py validate --semantic-only examples/reference/qodn217a0b.pmbus.yaml
 ```
 
-A document with no errors returns exit code `0`, even when warnings are present. A validation error returns exit code `1`. Input or file-loading failures return exit code `2`.
+No errors returns exit code `0`; validation errors return `1`; file/input failures return `2`.
 
 ## Deliberate non-goals for v0.1
 
-The semantic validator does not yet:
+The validator does not yet:
 
-- reproduce or enforce normative PMBus command definitions;
+- reproduce normative PMBus command definitions;
 - infer unsupported commands from absence;
 - reconcile conflicting source statements;
+- infer an undocumented vendor block-count convention without an explicit IR/source interpretation;
 - evaluate variant-dependent `default.cases`;
 - perform engineering-unit conversions;
-- prove every possible cross-command setting is valid;
-- validate runtime state machines or timing sequences;
-- validate dynamic limits that depend on runtime state;
-- infer undocumented block-count-byte, padding, or terminator conventions;
+- validate runtime state machines or dynamic runtime limits;
 - require manufacturer-specific commands that are only mentioned in source text but have no published command code.
 
 ## Next semantic layers
 
-Likely follow-on rules include:
+Likely follow-on work includes:
 
-- persistence command roles and access semantics;
-- referenced status/fault/telemetry role validation;
-- variant-dependent defaults;
-- richer dynamic-limit relationships;
+- persistence-role and access-semantic checks;
 - page/rail/phase reference validation;
-- command dependency cycles;
-- explicit block-content-length semantics;
+- variant-dependent defaults;
+- richer dynamic limits;
+- dependency-cycle detection;
+- semantic diff based on normalized command and data models;
 - machine-readable JSON validation output.
