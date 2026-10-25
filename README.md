@@ -1,5 +1,9 @@
 # PMBus IR
 
+<p align="center">
+  <strong>English</strong> | <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
 PMBus IR is an open, vendor-neutral intermediate representation for precisely describing the implemented PMBus interface of a power device.
 
 The project defines a canonical, machine-readable representation that can serve as a single source of truth for PMBus interface requirements and tooling.
@@ -120,6 +124,7 @@ This example is illustrative. The v0.1 schema is intentionally incomplete while 
 ```text
 pmbus-ir/
 ├── README.md
+├── README.zh-CN.md
 ├── LICENSE
 ├── CONTRIBUTING.md
 ├── spec/
