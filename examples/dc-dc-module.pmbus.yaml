@@ -1,0 +1,35 @@
+ir_version: "0.1"
+
+device:
+  manufacturer: Example Power
+  model: EXAMPLE-DC-DC
+  class: dc_dc_power_module
+
+standards:
+  pmbus: "1.5"
+
+transport:
+  interface: pmbus
+  pec: supported
+  max_bus_frequency_khz: 400
+
+addressing:
+  pages:
+    - id: 0
+      name: main_output
+
+commands:
+  READ_VOUT:
+    code: 0x8B
+    supported: true
+    origin: standard
+    access: read_only
+    transaction: read_word
+    value:
+      quantity: voltage
+      unit: V
+      encoding:
+        type: linear16
+        exponent_source: VOUT_MODE
+    scope:
+      pages: [0]

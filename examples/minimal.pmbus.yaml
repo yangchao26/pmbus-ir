@@ -1,0 +1,11 @@
+ir_version: "0.1"
+
+device:
+  manufacturer: Example Power
+  model: MINIMAL-001
+  class: dc_dc_power_module
+
+standards:
+  pmbus: "1.5"
+
+commands: {}

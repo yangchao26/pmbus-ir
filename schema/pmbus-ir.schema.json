@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/yangchao26/pmbus-ir/main/schema/pmbus-ir.schema.json",
+  "title": "PMBus IR",
+  "description": "Initial experimental schema for a vendor-neutral PMBus intermediate representation.",
+  "type": "object",
+  "required": ["ir_version", "device"],
+  "properties": {
+    "ir_version": {"type": "string"},
+    "device": {
+      "type": "object",
+      "required": ["manufacturer", "model"],
+      "properties": {
+        "manufacturer": {"type": "string"},
+        "model": {"type": "string"},
+        "class": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "standards": {"type": "object"},
+    "transport": {"type": "object"},
+    "addressing": {"type": "object"},
+    "commands": {"type": "object"},
+    "telemetry": {"type": "object"},
+    "configuration": {"type": "object"},
+    "status": {"type": "object"},
+    "faults": {"type": "object"},
+    "persistence": {"type": "object"},
+    "behavior": {"type": "object"},
+    "extensions": {"type": "object"}
+  },
+  "additionalProperties": false
+}
