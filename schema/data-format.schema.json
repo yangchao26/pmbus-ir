@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/yangchao26/pmbus-ir/main/schema/data-format.schema.json",
+  "title": "PMBus IR Data Format v0.1",
+  "description": "Schema for reusable or inline PMBus IR numeric data-format descriptors. Semantic validation provides the stronger representation checks.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "enum": ["linear11", "vout_linear"]
+    },
+    "wire_bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fixed_exponent": {
+      "type": "integer",
+      "minimum": -16,
+      "maximum": 15
+    },
+    "exponent_source": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "exponent_policy": {
+      "enum": ["per_word", "fixed_per_command", "external_command"]
+    },
+    "mantissa": {},
+    "exponent": {},
+    "device_policy": {
+      "type": "string"
+    },
+    "exponent_programmable": {
+      "type": "boolean"
+    },
+    "resolution_v": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "encoding": {
+      "type": "string"
+    },
+    "transport": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {"type": {"enum": ["linear11", "vout_linear"]}},
+        "required": ["type"]
+      },
+      "then": {
+        "properties": {"wire_bytes": {"const": 2}}
+      }
+    }
+  ]
+}
