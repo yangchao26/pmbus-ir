@@ -117,101 +117,104 @@ they carry device-specific meaning.
 
 ## `code`
 
-`code` is the one-byte command code.
+`code` is the one-byte command code and is represented as a YAML integer.
 
-It is stored as a YAML integer and should normally be authored in hexadecimal:
+Hexadecimal authoring is recommended because it matches PMBus documentation:
 
 ```yaml
 code: 0x8B
 ```
 
-Do not quote command codes:
+Decimal integer authoring is semantically equivalent and remains valid:
 
 ```yaml
-# Do not use
-code: "0x8B"
+code: 139
 ```
 
-The valid range is `0x00` through `0xFF`.
-
-Using a numeric value makes command-code comparison independent of YAML text
-formatting.
+Both forms parse to the same integer value and must compare identically in semantic diff.
+Quoted strings such as `"0x8B"` are not valid command-code values in v0.1.
 
 ## `origin`
 
-`origin` identifies the namespace of the command:
+`origin` identifies whether the command code/name comes from the PMBus command
+space or is manufacturer-defined.
+
+Allowed values:
+
+```text
+standard
+manufacturer_specific
+```
+
+Do not encode semantic roles into `origin`. For example, standard MFR identity
+commands use:
 
 ```yaml
 origin: standard
+roles: [identification]
 ```
 
-or:
-
-```yaml
-origin: manufacturer_specific
-```
-
-v0.1 intentionally does not use values such as `standard_identification`.
-Identification, telemetry, status, and similar concepts belong in `roles`,
-not in `origin`.
+rather than introducing an origin such as `standard_identification`.
 
 ## `support`
 
-`support` describes the completeness of the device implementation:
+`support` describes the completeness of the implementation of the command.
 
-```yaml
-support: full
-support: partial
-support: conditional
+Allowed values:
+
+```text
+full
+partial
+conditional
 ```
 
 ### `full`
 
-The device implements the command without a product-specific functional
-restriction documented by the source.
-
-Read-only commands can still have `support: full`; read-only versus read/write
-is represented by `access`.
+All behavior relevant to the device's documented implementation of the command
+is supported.
 
 ### `partial`
 
-The command is implemented, but only a subset of its normal functionality is
-available.
+The command is implemented, but only some functions, bits, modes, or response
+settings are supported.
 
-A partial command should include `limitations`.
-
-Example:
+A partial command should normally explain the limitation using one or more of:
 
 ```yaml
-support: partial
 limitations:
-  - soft-off with sequencing is not supported
-  - margin-ignore-fault behavior is not supported
+constraints:
+behavior:
 ```
 
 ### `conditional`
 
-The command or part of its behavior is available only under a documented
-condition.
+The command exists only under a stated device/variant/state condition.
 
-A conditional command must include `conditions`.
+`conditional` requires `conditions`.
+
+Example:
+
+```yaml
+support: conditional
+conditions:
+  - kind: product_option
+    option: -P
+```
 
 ### Absence is not `unsupported`
 
-A command that is absent from the `commands` map is **not automatically
-interpreted as unsupported**.
+A command that is absent from `commands` must **not** automatically be treated
+as unsupported unless the source is explicitly a complete supported/unsupported
+matrix.
 
-Absence means only that the IR document does not declare that command.
-
-This distinction is required because a public datasheet may list supported
-commands without providing an exhaustive matrix of every unsupported command.
+A PMBus IR document records known implemented commands. Missing evidence is not
+a negative capability assertion.
 
 ## `roles`
 
-`roles` is an optional semantic classification used by renderers, diff tools,
-and validation.
+`roles` provides semantic classification independent of command origin.
 
-v0.1 roles are:
+v0.1 values:
 
 ```text
 operation
@@ -226,20 +229,31 @@ identification
 manufacturer_control
 ```
 
-A command may have more than one role.
+A command may have multiple roles.
 
 Example:
 
 ```yaml
-roles: [status, operation]
+roles: [configuration, protection_limit]
 ```
 
-`roles` does not replace command identity and must not be used to infer PMBus
-normative semantics.
+## `aliases`
+
+`aliases` preserves alternate source names without changing the canonical map
+key.
+
+Example:
+
+```yaml
+READ_TEMPERATURE_1:
+  aliases: [READ_TEMP1]
+```
+
+Aliases are names only. They do not create additional commands.
 
 ## `access`
 
-`access` describes command-level access:
+Allowed values:
 
 ```text
 read_only
@@ -248,43 +262,26 @@ read_write
 execute
 ```
 
-### `execute`
-
-Use `execute` for command-only actions with no payload, such as a Send Byte
-operation:
+`execute` is used for commands whose operation is triggered by the transaction
+and which do not transfer a payload, for example:
 
 ```yaml
-access: execute
-transaction:
-  write: send_byte
-data:
-  kind: none
-  bytes: 0
+CLEAR_FAULTS:
+  access: execute
+  transaction:
+    write: send_byte
+  data:
+    kind: none
+    bytes: 0
 ```
 
-Resettable status bits do not create a separate command access type.
-For example, a status command remains:
-
-```yaml
-access: read_only
-```
-
-and its clear/reset behavior belongs under `behavior`.
+Command access and individual bit access are separate concepts.
 
 ## `transaction`
 
-`transaction` describes the actual SMBus transfer operation independently for
-read and write directions.
+`transaction` records SMBus transaction shape independently for read and write.
 
-Example:
-
-```yaml
-transaction:
-  read: read_word
-  write: write_word
-```
-
-v0.1 read transaction values:
+Possible read values:
 
 ```text
 read_byte
@@ -293,7 +290,7 @@ read_block
 unknown
 ```
 
-v0.1 write transaction values:
+Possible write values:
 
 ```text
 send_byte
@@ -540,36 +537,38 @@ structured relation can express them.
 Example:
 
 ```yaml
-support: partial
 limitations:
-  - margin-ignore-fault behavior is not supported
+  - Margin Ignore Fault mode is not supported.
 ```
-
-Use `limitations` for implementation coverage, not for operating ranges.
 
 ## `conditions`
 
-`conditions` captures state-, option-, or configuration-dependent
-availability.
+`conditions` captures conditions that affect command availability or behavior.
+
+Each condition requires a `kind` and may carry device-specific fields until a
+cross-device condition vocabulary is established.
 
 Example:
 
 ```yaml
-support: conditional
 conditions:
-  - kind: write_protect_disabled
-    via_command: MFR_DEVICE_TYPE
+  - kind: write_protection_state
+    command: MFR_DEVICE_TYPE
+    field: WPE
 ```
-
-Conditions are intentionally extensible in v0.1 because the first reference
-device already contains vendor-specific write-protection and variant behavior.
 
 ## `persistence`
 
-A writable value is persistent only when the source explicitly establishes
-that behavior.
+Persistence is explicit and structured.
 
-Example:
+### Volatile
+
+```yaml
+persistence:
+  mode: volatile
+```
+
+### Nonvolatile through a commit command
 
 ```yaml
 persistence:
@@ -578,13 +577,13 @@ persistence:
   restore_command: RESTORE_DEFAULT_ALL
 ```
 
-If persistence is not documented, omit `persistence`.
+`commit_command` is required for `nonvolatile_via_command`.
 
-Do not infer persistence from the fact that a command is writable.
+If persistence is not documented, omit `persistence`. Do not infer volatility.
 
 ## `timing`
 
-Command execution timing belongs under `timing`.
+`timing` stores timing that is intrinsic to executing or using the command.
 
 Example:
 
@@ -595,269 +594,201 @@ timing:
   block_further_commands_until_complete: true
 ```
 
-This keeps timing separate from functional behavior.
+The internal shape of `timing` remains extensible in v0.1.
 
 ## `behavior`
 
-`behavior` contains structured product-specific semantics that do not belong
-to the generic wire/data model.
+`behavior` stores product-specific command semantics that do not fit a simpler
+common field.
 
 Examples include:
 
 - side effects;
-- fault response;
-- clear/reset behavior;
-- hardware-pin interaction;
 - automatic clamping;
 - retry behavior;
-- command sequencing requirements.
+- dependency on hardware pins;
+- sensor interpretation;
+- calibration behavior.
 
-Example:
-
-```yaml
-behavior:
-  side_effects:
-    - clear_supported_status_flags
-    - retire_active_smbalert
-```
-
-The command model should prefer structured fields inside `behavior`, but v0.1
-allows device-specific extensions there when no common representation has yet
-been established.
+The internal shape remains extensible in v0.1. Common patterns should move into
+structured fields in later model versions only after multiple reference devices
+show that they are reusable.
 
 ## `source`
 
-`source` is optional provenance for the command entry.
+`source` preserves source-specific metadata, ambiguity, or conflicts relevant
+to one command.
 
 Example:
 
 ```yaml
 source:
-  document: QODN217A0B_PDS
-  revision: "3.4"
-  pages: [21]
+  conflict: >-
+    Detailed description defines a two-byte payload while the quick-reference
+    table labels the transfer as Read Byte.
 ```
 
-A command entry may omit `source` when provenance is already unambiguous at the
-document level.
+Document-wide conflicts belong under the document-level `source_conflicts`.
 
 ## `notes`
 
-`notes` is the last-resort location for source-supported information that is
-important but not yet modeled structurally.
+`notes` is for concise human-readable information that does not yet justify a
+new structured semantic field.
+
+It must not be used as a substitute for fields already defined by this model.
+
+## Canonical examples
+
+### Scalar configuration command
 
 ```yaml
-notes:
-  - Datasheet advises consulting the vendor before changing fault-limit values.
+VOUT_COMMAND:
+  code: 0x21
+  origin: standard
+  support: full
+  roles: [configuration]
+  access: read_write
+  transaction:
+    read: read_word
+    write: write_word
+  data:
+    kind: scalar
+    bytes: 2
+    format_ref: vout_linear
+    quantity: voltage
+    unit: V
+    range:
+      min: 9.5
+      max: 12.5
+    resolution: 0.000244140625
+  default:
+    value: 12.0
+    raw: "0xC000"
+  persistence:
+    mode: nonvolatile_via_command
+    commit_command: STORE_DEFAULT_ALL
+    restore_command: RESTORE_DEFAULT_ALL
 ```
 
-Do not use `notes` as a substitute for fields that already exist in the model.
-
-## Complete examples
-
-### Scalar read/write command
+### Telemetry command
 
 ```yaml
-commands:
-  VOUT_COMMAND:
-    code: 0x21
-    origin: standard
-    support: full
-    roles: [configuration]
-    access: read_write
-    transaction:
-      read: read_word
-      write: write_word
-    data:
-      kind: scalar
-      bytes: 2
-      format_ref: vout_linear
-      quantity: voltage
-      unit: V
-      range:
-        min: 9.5
-        max: 12.5
-      resolution: 0.000244140625
-    default:
-      value: 12.0
-      raw: "0xC000"
-    persistence:
-      mode: nonvolatile_via_command
-      commit_command: STORE_DEFAULT_ALL
-      restore_command: RESTORE_DEFAULT_ALL
+READ_VIN:
+  code: 0x88
+  origin: standard
+  support: full
+  roles: [telemetry]
+  access: read_only
+  transaction:
+    read: read_word
+  data:
+    kind: scalar
+    bytes: 2
+    format:
+      type: linear11
+      fixed_exponent: -3
+    quantity: voltage
+    unit: V
+    range:
+      min: 0
+      max: 127.875
+    resolution: 0.125
 ```
 
-### Partial bit-field command
+### Partial fault-response command
 
 ```yaml
-commands:
-  OPERATION:
-    code: 0x01
-    origin: standard
-    support: partial
-    roles: [operation]
-    access: read_write
-    transaction:
-      read: read_byte
-      write: write_byte
-    data:
-      kind: bit_field
-      bytes: 1
-      bits:
-        "7":
-          name: ON
-          access: read_write
-          default: 1
-        "6":
-          name: reserved_or_unsupported
-          access: read_only
-          default: 0
-    default:
-      raw: "0x88"
-    limitations:
-      - soft-off with sequencing is not supported
-      - margin-ignore-fault behavior is not supported
-    behavior:
-      hardware_enable_required: true
-```
-
-### Execute command
-
-```yaml
-commands:
-  STORE_DEFAULT_ALL:
-    code: 0x11
-    origin: standard
-    support: full
-    roles: [persistence]
-    access: execute
-    transaction:
-      write: send_byte
-    data:
-      kind: none
-      bytes: 0
-    timing:
-      execution_time_ms:
-        max: 500
-      block_further_commands_until_complete: true
-    behavior:
-      stores_to: eeprom
-```
-
-### Status command
-
-```yaml
-commands:
-  STATUS_CML:
-    code: 0x7E
-    origin: standard
-    support: partial
-    roles: [status]
-    access: read_only
-    transaction:
-      read: read_byte
-    data:
-      kind: bit_field
-      bytes: 1
-      bits:
-        "7":
-          name: INVALID_OR_UNSUPPORTED_COMMAND
-          access: read_only
-        "6":
-          name: INVALID_OR_UNSUPPORTED_DATA
-          access: read_only
-        "5":
-          name: PEC_FAILED
-          access: read_only
-    limitations:
-      - remaining status bits are not supported by this device
-    behavior:
-      reset_supported: true
-      clear_command: CLEAR_FAULTS
+VOUT_OV_FAULT_RESPONSE:
+  code: 0x41
+  origin: standard
+  support: partial
+  roles: [configuration, protection_response]
+  access: read_write
+  transaction:
+    read: read_byte
+    write: write_byte
+  data:
+    kind: bit_field
+    bytes: 1
+  default:
+    raw: "0xB8"
+  limitations:
+    - Only shutdown-and-retry response mode is supported.
+    - Only no-retry and continuous-retry selections are supported.
 ```
 
 ### Manufacturer-specific structured command
 
 ```yaml
-commands:
-  MFR_DEVICE_TYPE:
-    code: 0xD0
-    origin: manufacturer_specific
-    support: partial
-    roles: [identification, manufacturer_control]
-    access: read_write
-    transaction:
-      read: read_word
-      write: write_word
-    data:
-      kind: structured
-      bytes: 2
-      fields:
-        write_protect_enable:
-          location: low_byte_bit_1
-        module_name:
-          location: high_byte_bit_0_and_low_byte_bits_7_2
-    default:
-      raw: "0x0152"
-    behavior:
-      controls_manufacturer_write_protect_gate: true
+MFR_DEVICE_TYPE:
+  code: 0xD0
+  origin: manufacturer_specific
+  support: partial
+  roles: [manufacturer_control, identification]
+  access: read_write
+  transaction:
+    read: read_word
+    write: write_word
+  data:
+    kind: structured
+    bytes: 2
+    fields:
+      ...
 ```
 
-## v0.1 semantic validation rules
+## Validation rules in v0.1
 
-JSON Schema can validate the local shape of a command entry. Additional
-semantic validation is required across the whole document.
+The companion JSON Schema enforces the structural rules that are stable enough
+to validate now.
 
-A PMBus IR semantic validator should eventually enforce at least:
+Important rules include:
 
-1. command-map keys follow the canonical identifier syntax;
-2. command codes are unique within a device document unless an explicit
-   aliasing mechanism is later defined;
-3. `read_only` commands provide only a read transaction;
-4. `write_only` and `execute` commands provide only a write transaction;
-5. `read_write` commands provide both read and write transactions;
-6. `conditional` commands declare at least one condition;
-7. referenced commands in constraints, persistence, and behavior exist;
-8. `format_ref` refers to a declared document-level data format;
-9. scalar ranges have `min <= max`;
-10. cross-command constraints are internally consistent where they can be
-    evaluated.
+1. `code`, `origin`, `support`, `access`, `transaction`, and `data` are required.
+2. `code` is an integer from 0 through 255.
+3. `origin`, `support`, `access`, transaction names, roles, and `data.kind` use
+   closed v0.1 enumerations.
+4. `read_only` commands require a read transaction and cannot define a write
+   transaction.
+5. `write_only` and `execute` commands require a write transaction and cannot
+   define a read transaction.
+6. `read_write` commands require both read and write transactions.
+7. `conditional` support requires `conditions`.
+8. `nonvolatile_via_command` persistence requires `commit_command`.
+9. `data` may use either `format_ref` or inline `format`, but not both.
+10. Command objects reject unknown top-level fields. Device-specific details
+    belong under the defined extensibility fields such as `behavior`, `source`,
+    `notes`, or structured `conditions`.
 
-## QODN217A0B migration decisions
+## Semantic validation beyond JSON Schema
 
-The first reference implementation exposed several ad-hoc patterns that v0.1
-removes.
+Some important checks are intentionally left to semantic validation rather than
+JSON Schema:
 
-| Current reference pattern | Command Model v0.1 |
-| --- | --- |
-| `support: supported`, `full_read`, `read_support` | normalize to `full`, `partial`, or `conditional` |
-| `transaction: read_write_word` | `transaction.read` + `transaction.write` |
-| separate `value:` and `data:` branches | one `data:` branch |
-| top-level `bits:` / `supported_bits:` | `data.bits:` |
-| `default_raw`, `default_raw_negative_logic`, scalar `default` | structured `default:` |
-| free-text cross-command `constraints` | structured relation objects |
-| `persistence: store_default_all` | structured `persistence:` object |
-| `read_only_resettable` access | `read_only` + reset behavior |
-| `supported_functions`, `side_effects`, `default_behavior` | structured `behavior:` |
-| `safety_note` | `notes:` |
-| `origin: standard_identification` | `origin: standard` + `roles: [identification]` |
-| quoted command codes such as `"0x8B"` | numeric YAML code `0x8B` |
+- duplicate command codes in one device document;
+- `other_command` references that do not exist;
+- `format_ref` references that do not exist;
+- persistence commands that do not exist;
+- range consistency such as `min <= max`;
+- cross-command inequalities;
+- command-code/name consistency with a future command registry;
+- transaction compatibility with the referenced PMBus standard command;
+- variant-condition vocabulary.
 
-The QODN217A0B reference document should be migrated to this model before
-`schema/command.schema.json` is wired into the top-level
-`schema/pmbus-ir.schema.json`.
+These checks should be implemented by `pmbus-ir validate` after the structural
+model is stable.
 
-## Deliberately deferred from v0.1
+## QODN217A0B migration result
 
-The following are not frozen yet:
+The QODN217A0B reference implementation has been migrated to this v0.1 command
+shape. The migration establishes the following normalization rules in practice:
 
-- a complete common vocabulary for every bit-field meaning;
-- a universal expression language for complex dynamic limits;
-- full PAGE/PHASE scope semantics;
-- a common manufacturer-extension namespace;
-- calibration-command modeling;
-- confidence scoring;
-- source-conflict resolution policy at individual field granularity.
+- command codes are YAML integers (decimal or hexadecimal authoring are equivalent);
+- legacy support values such as `supported`, `full_read`, and `read_support` are removed;
+- synthetic transactions such as `read_write_word` are split into `read` and `write`;
+- engineering `value` and payload `data` are merged into one `data` object;
+- command defaults are represented only under `default`;
+- status bit reset semantics move to `behavior` rather than a custom access enum;
+- `READ_TEMPERATURE_1` is the canonical identifier and `READ_TEMP1` is retained as an alias;
+- source conflicts remain explicit rather than being normalized away.
 
-These should be driven by additional real-device references rather than added
-speculatively.
+The current QODN217A0B reference contains 48 commands from the datasheet quick-reference inventory and each command validates against `schema/command.schema.json`.
