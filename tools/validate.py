@@ -17,6 +17,7 @@ try:
 except ImportError as exc:
     raise SystemExit("jsonschema is required. Install tools/requirements.txt.") from exc
 
+from data_semantics import validate_data_model_semantics
 from semantic_validator import ValidationIssue, validate_semantics
 
 
@@ -148,6 +149,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     issues.extend(validate_semantics(document))
+    issues.extend(validate_data_model_semantics(document))
     issues.sort(key=lambda issue: (issue.severity != "error", issue.path, issue.code, issue.message))
 
     if issues:
