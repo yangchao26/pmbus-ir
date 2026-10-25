@@ -246,8 +246,8 @@ class SemanticValidationTests(unittest.TestCase):
         issues = validate_semantics(document)
         errors = [issue for issue in issues if issue.severity == "error"]
         self.assertEqual(errors, [], issues)
-        warning_codes = {issue.code for issue in issues if issue.severity == "warning"}
-        self.assertIn("ambiguous_resolution_semantics", warning_codes)
+        warnings = [issue for issue in issues if issue.severity == "warning"]
+        self.assertEqual(warnings, [], issues)
 
 
 if __name__ == "__main__":
