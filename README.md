@@ -108,17 +108,18 @@ addressing:
 commands:
   READ_VOUT:
     code: 0x8B
-    supported: true
+    origin: standard
+    support: full
+    roles: [telemetry]
     access: read_only
-    transaction: read_word
-    value:
+    transaction:
+      read: read_word
+    data:
+      kind: scalar
+      bytes: 2
       quantity: voltage
       unit: V
-      encoding:
-        type: linear16
-        exponent_source: VOUT_MODE
-    scope:
-      pages: [0]
+      format_ref: vout_linear
 ```
 
 This example is illustrative. The v0.1 schema is intentionally incomplete while the semantic model is being established from real device examples.
@@ -138,10 +139,13 @@ pmbus-ir/
 │   ├── behavior-model.md
 │   └── diff-semantics.md
 ├── schema/
-│   └── pmbus-ir.schema.json
+│   ├── pmbus-ir.schema.json
+│   └── command.schema.json
 ├── examples/
 │   ├── minimal.pmbus.yaml
-│   └── dc-dc-module.pmbus.yaml
+│   ├── dc-dc-module.pmbus.yaml
+│   └── reference/
+│       └── qodn217a0b.pmbus.yaml
 ├── tools/
 │   └── README.md
 └── tests/
@@ -163,7 +167,7 @@ A GUI, PMBus master implementation, firmware stack, and device communication lay
 
 ## Status
 
-Early design / pre-v0.1. The model and schema are expected to change as reference devices are added.
+Early design / pre-v0.1. The QODN217A0B reference implementation now uses the Command IR Model v0.1 shape for its complete datasheet-supported command inventory. The model and schema are still expected to evolve as additional reference devices are added.
 
 ## License
 
