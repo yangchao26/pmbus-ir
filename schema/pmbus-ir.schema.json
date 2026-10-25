@@ -2,36 +2,92 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/yangchao26/pmbus-ir/main/schema/pmbus-ir.schema.json",
   "title": "PMBus IR",
-  "description": "Initial experimental schema for a vendor-neutral PMBus intermediate representation.",
+  "description": "Root schema for a vendor-neutral PMBus intermediate representation document.",
   "type": "object",
-  "required": ["ir_version", "device"],
+  "required": [
+    "ir_version",
+    "device"
+  ],
   "properties": {
-    "ir_version": {"type": "string"},
-    "document": {"type": "object"},
-    "source": {"type": "object"},
+    "ir_version": {
+      "type": "string"
+    },
+    "document": {
+      "type": "object"
+    },
+    "source": {
+      "type": "object"
+    },
     "device": {
       "type": "object",
-      "required": ["manufacturer", "model"],
+      "required": [
+        "manufacturer",
+        "model"
+      ],
       "properties": {
-        "manufacturer": {"type": "string"},
-        "model": {"type": "string"},
-        "class": {"type": "string"}
+        "manufacturer": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        }
       },
       "additionalProperties": true
     },
-    "standards": {"type": "object"},
-    "transport": {"type": "object"},
-    "addressing": {"type": "object"},
-    "data_formats": {"type": "object"},
-    "commands": {"type": "object"},
-    "telemetry": {"type": "object"},
-    "configuration": {"type": "object"},
-    "status": {"type": "object"},
-    "faults": {"type": "object"},
-    "persistence": {"type": "object"},
-    "behavior": {"type": "object"},
-    "extensions": {"type": "object"},
-    "source_conflicts": {"type": "object"}
+    "standards": {
+      "type": "object"
+    },
+    "transport": {
+      "type": "object"
+    },
+    "addressing": {
+      "type": "object"
+    },
+    "data_formats": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "$ref": "data-format.schema.json"
+      }
+    },
+    "commands": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Z][A-Z0-9_]*$"
+      },
+      "additionalProperties": {
+        "$ref": "command.schema.json"
+      }
+    },
+    "telemetry": {
+      "type": "object"
+    },
+    "configuration": {
+      "type": "object"
+    },
+    "status": {
+      "type": "object"
+    },
+    "faults": {
+      "type": "object"
+    },
+    "persistence": {
+      "type": "object"
+    },
+    "behavior": {
+      "type": "object"
+    },
+    "extensions": {
+      "type": "object"
+    },
+    "source_conflicts": {
+      "type": "object"
+    }
   },
   "additionalProperties": false
 }
