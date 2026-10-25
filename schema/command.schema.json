@@ -18,7 +18,8 @@
       "required": ["kind", "bytes"],
       "properties": {
         "kind": {"enum": ["none", "scalar", "bit_field", "string", "structured"]},
-        "bytes": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0, "description": "Semantic content bytes. Protocol framing, block count, and PEC are excluded."},
+        "block": {"$ref": "#/$defs/block_transfer"},
         "format_ref": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
         "format": {"$ref": "data-format.schema.json"},
         "quantity": {"type": "string"},
@@ -26,7 +27,7 @@
         "range": {"$ref": "#/$defs/range"},
         "encoding_resolution": {"type": "number", "exclusiveMinimum": 0},
         "published_resolution": {"type": "number", "exclusiveMinimum": 0},
-        "resolution": {"type": "number", "exclusiveMinimum": 0},
+        "resolution": {"type": "number", "exclusiveMinimum": 0, "description": "Legacy experimental field. New documents should use encoding_resolution and/or published_resolution."},
         "step": {"type": "number", "exclusiveMinimum": 0},
         "accuracy": {"type": "object"},
         "bits": {"type": "object", "propertyNames": {"pattern": "^(0|[1-9][0-9]*)$"}, "additionalProperties": {"$ref": "#/$defs/bit_field"}},
@@ -59,6 +60,16 @@
     "range": {"type": "object", "required": ["min", "max"], "properties": {"min": {"type": "number"}, "max": {"type": "number"}}, "additionalProperties": false},
     "default": {"type": "object", "properties": {"value": {}, "raw": {"type": "string", "pattern": "^0x[0-9A-Fa-f]+$"}, "cases": {"type": "array", "items": {"type": "object"}}}, "additionalProperties": false, "minProperties": 1},
     "constraint": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["relation", "dynamic_limit", "allowed_values"]}, "operator": {"enum": ["gt", "ge", "lt", "le", "eq", "ne"]}, "other_command": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}, "offset": {"type": "number"}, "unit": {"type": "string"}, "values": {"type": "array"}, "description": {"type": "string"}}, "additionalProperties": true},
-    "bit_field": {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}, "access": {"enum": ["read_only", "write_only", "read_write"]}, "default": {"type": ["integer", "boolean", "string"]}, "fixed": {"type": ["integer", "boolean", "string"]}, "values": {"type": "object"}, "supported": {"type": "boolean"}, "source": {"type": "string"}}, "additionalProperties": true}
+    "bit_field": {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}, "access": {"enum": ["read_only", "write_only", "read_write"]}, "default": {"type": ["integer", "boolean", "string"]}, "fixed": {"type": ["integer", "boolean", "string"]}, "values": {"type": "object"}, "supported": {"type": "boolean"}, "source": {"type": "string"}}, "additionalProperties": true},
+    "block_transfer": {
+      "type": "object",
+      "required": ["content_bytes", "count_prefix_bytes", "transaction_payload_bytes"],
+      "properties": {
+        "content_bytes": {"type": "integer", "minimum": 1},
+        "count_prefix_bytes": {"const": 1},
+        "transaction_payload_bytes": {"type": "integer", "minimum": 2}
+      },
+      "additionalProperties": false
+    }
   }
 }
