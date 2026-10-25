@@ -22,11 +22,24 @@ Run only semantic validation:
 python tools/validate.py validate --semantic-only examples/reference/qodn217a0b.pmbus.yaml
 ```
 
-The semantic validator checks document-internal consistency such as duplicate command codes, broken command and data-format references, invalid ranges, defaults outside ranges, and structured cross-command relationships.
+The validator currently checks document-internal consistency including:
+
+- duplicate command codes and alias collisions;
+- broken command and data-format references;
+- scalar ranges, defaults, and cross-command relations;
+- `format_ref` versus command payload width;
+- LINEAR11 and VOUT Linear representation constraints;
+- fixed-exponent range and encoding-resolution consistency;
+- programming step quantization;
+- bit-field width and bit positions;
+- string/block transaction and byte-length consistency.
+
+Warnings are reported separately from errors and do not cause validation failure. This is used, for example, when an older ambiguous `resolution` field differs from the mathematically implied encoding LSB and should be migrated to either `encoding_resolution` or `published_resolution`.
 
 See:
 
 ```text
+spec/data-model.md
 spec/semantic-validation.md
 ```
 
