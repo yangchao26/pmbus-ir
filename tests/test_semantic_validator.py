@@ -15,7 +15,14 @@ from semantic_validator import validate_semantics  # noqa: E402
 
 def _minimal_document() -> dict:
     return {
-        "data_formats": {"vout_linear": {}},
+        "data_formats": {
+            "vout_linear": {
+                "type": "vout_linear",
+                "wire_bytes": 2,
+                "fixed_exponent": -12,
+                "exponent_source": "VOUT_MODE",
+            }
+        },
         "commands": {
             "STORE_DEFAULT_ALL": {
                 "code": 0x11,
@@ -24,6 +31,14 @@ def _minimal_document() -> dict:
                 "access": "execute",
                 "transaction": {"write": "send_byte"},
                 "data": {"kind": "none", "bytes": 0},
+            },
+            "VOUT_MODE": {
+                "code": 0x20,
+                "origin": "standard",
+                "support": "full",
+                "access": "read_only",
+                "transaction": {"read": "read_byte"},
+                "data": {"kind": "structured", "bytes": 1},
             },
             "VOUT_COMMAND": {
                 "code": 0x21,
@@ -38,6 +53,7 @@ def _minimal_document() -> dict:
                     "quantity": "voltage",
                     "unit": "V",
                     "range": {"min": 9.5, "max": 12.5},
+                    "encoding_resolution": 2**-12,
                 },
                 "default": {"value": 12.0},
                 "persistence": {
@@ -120,13 +136,118 @@ class SemanticValidationTests(unittest.TestCase):
         ]
         self.assert_issue(document, "default_violates_constraint")
 
-    def test_qodn217_reference_is_semantically_valid(self) -> None:
+    def test_format_ref_payload_width_mismatch(self) -> None:
+        document = _minimal_document()
+        document["commands"]["VOUT_COMMAND"]["data"]["bytes"] = 1
+        self.assert_issue(document, "format_payload_width_mismatch")
+
+    def test_linear11_fixed_exponent_range(self) -> None:
+        document = _minimal_document()
+        document["commands"]["READ_VIN"] = {
+            "code": 0x88,
+            "origin": "standard",
+            "support": "full",
+            "access": "read_only",
+            "transaction": {"read": "read_word"},
+            "data": {
+                "kind": "scalar",
+                "bytes": 2,
+                "format": {"type": "linear11", "fixed_exponent": -17},
+            },
+        }
+        self.assert_issue(document, "invalid_fixed_exponent")
+
+    def test_encoding_resolution_matches_fixed_exponent(self) -> None:
+        document = _minimal_document()
+        document["commands"]["READ_VIN"] = {
+            "code": 0x88,
+            "origin": "standard",
+            "support": "full",
+            "access": "read_only",
+            "transaction": {"read": "read_word"},
+            "data": {
+                "kind": "scalar",
+                "bytes": 2,
+                "format": {"type": "linear11", "fixed_exponent": -3},
+                "encoding_resolution": 0.25,
+            },
+        }
+        self.assert_issue(document, "encoding_resolution_mismatch")
+
+    def test_step_must_be_encoding_multiple(self) -> None:
+        document = _minimal_document()
+        document["commands"]["READ_VIN"] = {
+            "code": 0x88,
+            "origin": "standard",
+            "support": "full",
+            "access": "read_only",
+            "transaction": {"read": "read_word"},
+            "data": {
+                "kind": "scalar",
+                "bytes": 2,
+                "format": {"type": "linear11", "fixed_exponent": -3},
+                "step": 0.2,
+            },
+        }
+        self.assert_issue(document, "step_not_encoding_multiple")
+
+    def test_bit_field_width(self) -> None:
+        document = _minimal_document()
+        document["commands"]["STATUS_BYTE"] = {
+            "code": 0x78,
+            "origin": "standard",
+            "support": "full",
+            "access": "read_only",
+            "transaction": {"read": "read_byte"},
+            "data": {
+                "kind": "bit_field",
+                "bytes": 1,
+                "bits": {"8": {"name": "OUT_OF_RANGE"}},
+            },
+        }
+        self.assert_issue(document, "bit_out_of_range")
+
+    def test_string_requires_block_transaction(self) -> None:
+        document = _minimal_document()
+        document["commands"]["MFR_ID"] = {
+            "code": 0x99,
+            "origin": "standard",
+            "support": "full",
+            "access": "read_only",
+            "transaction": {"read": "read_byte"},
+            "data": {"kind": "string", "bytes": 5, "encoding": "8_bit_character"},
+        }
+        self.assert_issue(document, "string_requires_block_transaction")
+
+    def test_string_default_length(self) -> None:
+        document = _minimal_document()
+        document["commands"]["MFR_ID"] = {
+            "code": 0x99,
+            "origin": "standard",
+            "support": "full",
+            "access": "read_only",
+            "transaction": {"read": "read_block"},
+            "data": {"kind": "string", "bytes": 3, "encoding": "8_bit_character"},
+            "default": {"value": "OMPW"},
+        }
+        self.assert_issue(document, "string_default_too_long")
+
+    def test_vout_linear_expanded_representation(self) -> None:
+        document = _minimal_document()
+        document["data_formats"]["vout_linear"]["mantissa"] = "signed_16_bit"
+        self.assert_issue(document, "vout_linear_representation_mismatch")
+
+    def test_qodn217_reference_has_no_semantic_errors(self) -> None:
         reference_path = (
             REPO_ROOT / "examples" / "reference" / "qodn217a0b.pmbus.yaml"
         )
         with reference_path.open("r", encoding="utf-8") as stream:
             document = yaml.safe_load(stream)
-        self.assertEqual(validate_semantics(document), [])
+        issues = validate_semantics(document)
+        errors = [issue for issue in issues if issue.severity == "error"]
+        self.assertEqual(errors, [], issues)
+        warning_codes = {issue.code for issue in issues if issue.severity == "warning"}
+        self.assertIn("ambiguous_resolution_semantics", warning_codes)
 
 
 if __name__ == "__main__":
