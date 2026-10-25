@@ -7,6 +7,8 @@
   "required": ["ir_version", "device"],
   "properties": {
     "ir_version": {"type": "string"},
+    "document": {"type": "object"},
+    "source": {"type": "object"},
     "device": {
       "type": "object",
       "required": ["manufacturer", "model"],
@@ -20,6 +22,7 @@
     "standards": {"type": "object"},
     "transport": {"type": "object"},
     "addressing": {"type": "object"},
+    "data_formats": {"type": "object"},
     "commands": {"type": "object"},
     "telemetry": {"type": "object"},
     "configuration": {"type": "object"},
@@ -27,7 +30,8 @@
     "faults": {"type": "object"},
     "persistence": {"type": "object"},
     "behavior": {"type": "object"},
-    "extensions": {"type": "object"}
+    "extensions": {"type": "object"},
+    "source_conflicts": {"type": "object"}
   },
   "additionalProperties": false
 }
