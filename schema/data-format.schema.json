@@ -32,9 +32,14 @@
     "exponent_programmable": {
       "type": "boolean"
     },
-    "resolution_v": {
+    "encoding_resolution": {
       "type": "number",
       "exclusiveMinimum": 0
+    },
+    "resolution_v": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Legacy experimental field. New documents should use encoding_resolution."
     },
     "encoding": {
       "type": "string"
