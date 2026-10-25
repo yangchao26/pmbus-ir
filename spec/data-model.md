@@ -18,21 +18,39 @@ Semantic checks are implemented in:
 
 ```text
 tools/semantic_validator.py
+tools/data_semantics.py
 ```
 
 ## Design boundary
 
-The Data Model separates four concepts that are frequently mixed together in
+The Data Model separates five concepts that are frequently mixed together in
 datasheets and hand-written command tables:
 
-1. **transport width** — how many command data bytes are transferred;
-2. **numeric representation** — how bits encode a numeric value;
-3. **engineering semantics** — quantity, unit, range, accuracy, and device behavior;
-4. **device/source resolution** — a source-published measurement or programming resolution that may differ from the mathematical encoding LSB.
+1. **content width** — how many bytes belong to the semantic command value;
+2. **transport framing** — transaction-specific bytes such as an SMBus block count prefix;
+3. **numeric representation** — how bits encode a numeric value;
+4. **engineering semantics** — quantity, unit, range, accuracy, and device behavior;
+5. **source-published resolution** — a device/measurement resolution stated by a source and not necessarily equal to the mathematical encoding LSB.
 
 A host may need different handling even when two commands represent the same
 engineering quantity. Conversely, a device may publish a measurement
 resolution that is coarser than the underlying wire encoding.
+
+## Canonical meaning of `data.bytes`
+
+`data.bytes` always means **semantic content bytes**.
+
+It excludes protocol framing and transport metadata, including:
+
+- SMBus block count prefix;
+- PEC;
+- slave address;
+- command code;
+- ACK/NACK signaling.
+
+This rule is independent of transaction type. A one-byte command, a word
+command, and a block command therefore use `data.bytes` with the same semantic
+meaning.
 
 ## Data kinds
 
@@ -48,8 +66,6 @@ structured
 
 ### `none`
 
-No command data payload:
-
 ```yaml
 data:
   kind: none
@@ -57,8 +73,6 @@ data:
 ```
 
 ### `scalar`
-
-A numeric engineering value:
 
 ```yaml
 data:
@@ -73,8 +87,6 @@ data:
 ```
 
 ### `bit_field`
-
-A fixed-width collection of individually described bits:
 
 ```yaml
 data:
@@ -95,13 +107,16 @@ Character data transferred with block transaction semantics:
 ```yaml
 data:
   kind: string
-  bytes: 5
+  bytes: 4
   encoding: 8_bit_character
+  block:
+    content_bytes: 4
+    count_prefix_bytes: 1
+    transaction_payload_bytes: 5
 ```
 
-`bytes` is the command's declared data-byte count. Data IR v0.1 does not infer
-whether a vendor table includes an SMBus block count byte unless the source or
-the IR explicitly states that convention.
+Here `bytes: 4` and `content_bytes: 4` describe the four characters. The
+transaction payload contains one additional SMBus block count byte.
 
 ### `structured`
 
@@ -111,10 +126,11 @@ single-bit model:
 ```yaml
 data:
   kind: structured
-  bytes: 2
-  fields:
-    major: ...
-    minor: ...
+  bytes: 12
+  block:
+    content_bytes: 12
+    count_prefix_bytes: 1
+    transaction_payload_bytes: 13
 ```
 
 ## Reusable and inline formats
@@ -128,6 +144,7 @@ data_formats:
     wire_bytes: 2
     fixed_exponent: -12
     exponent_source: VOUT_MODE
+    encoding_resolution: 0.000244140625
 
 commands:
   READ_VOUT:
@@ -188,10 +205,6 @@ encoding_lsb = 2 ^ fixed_exponent
 For example, `fixed_exponent: -3` gives an encoding LSB of `0.125` engineering
 units.
 
-A document-level LINEAR11 descriptor may omit `fixed_exponent` when the source
-only establishes the generic representation and does not publish a single
-fixed exponent shared by all referencing commands.
-
 ## VOUT Linear
 
 PMBus IR uses `vout_linear` for the VOUT-style linear representation used by
@@ -204,6 +217,7 @@ data_formats:
     wire_bytes: 2
     fixed_exponent: -12
     exponent_source: VOUT_MODE
+    encoding_resolution: 0.000244140625
 ```
 
 The format type carries these representation semantics:
@@ -211,10 +225,6 @@ The format type carries these representation semantics:
 - command data width: 16 bits / 2 bytes;
 - mantissa: unsigned 16-bit value;
 - exponent: supplied separately rather than stored in the 16-bit command data word.
-
-When the implemented device fixes that exponent, `fixed_exponent` records the
-actual implemented value. `exponent_source` records the command that exposes
-or controls the exponent when the source material identifies one.
 
 ## Encoding resolution versus published resolution
 
@@ -244,21 +254,24 @@ published_resolution: 0.146
 
 It is not required to equal the encoding LSB.
 
-This distinction is necessary for the QODN217A0B reference implementation:
-its `READ_IOUT` representation records `fixed_exponent: -3`, whose encoding
-LSB is `0.125 A`, while the public datasheet-derived reference information
-also records a published current resolution of `0.146 A`. PMBus IR preserves
-both facts rather than rewriting one to match the other.
+For QODN217A0B `READ_IOUT`, the fixed LINEAR11 exponent is `-3`, so the
+encoding LSB is `0.125 A`, while the datasheet publishes a measurement
+resolution of `0.146 A`. The reference IR records both values explicitly.
 
-The earlier experimental field:
+The earlier experimental command field:
 
 ```yaml
 resolution:
 ```
 
-is considered ambiguous. Semantic Validation v0.1 emits a warning when that
-field materially differs from a fixed-exponent encoding LSB. New documents
-should use `encoding_resolution` or `published_resolution` explicitly.
+and the earlier reusable-format field:
+
+```yaml
+resolution_v:
+```
+
+are legacy fields. New/reference documents should use the explicit canonical
+fields. The validator reports legacy use as a warning.
 
 ## Programming step
 
@@ -274,7 +287,7 @@ an integer multiple of the encoding LSB.
 
 ## Payload-width compatibility
 
-When a reusable format declares:
+When a reusable numeric format declares:
 
 ```yaml
 wire_bytes: 2
@@ -282,15 +295,12 @@ wire_bytes: 2
 
 and a command references it, the command must declare a matching `data.bytes`.
 
-The same rule is implied for known v0.1 numeric format types:
+Known v0.1 numeric representations imply:
 
 ```text
-linear11   -> 2 bytes
-vout_linear -> 2 bytes
+linear11    -> 2 content bytes
+vout_linear -> 2 content bytes
 ```
-
-This catches interfaces that use the correct semantic format name but an
-incompatible SMBus data width.
 
 ## Bit-field width
 
@@ -308,29 +318,66 @@ valid bit positions are:
 0 .. (8 * N - 1)
 ```
 
-For example, bit `8` is invalid when `bytes: 1`.
+## SMBus block length model
 
-## String and block length
+Block commands must explicitly represent three lengths:
+
+```yaml
+block:
+  content_bytes: N
+  count_prefix_bytes: 1
+  transaction_payload_bytes: N + 1
+```
+
+The invariants are:
+
+```text
+data.bytes == block.content_bytes
+block.count_prefix_bytes == 1
+block.transaction_payload_bytes == block.content_bytes + block.count_prefix_bytes
+```
+
+`transaction_payload_bytes` deliberately excludes PEC and all address/command/
+ACK framing.
+
+This makes a vendor table's byte-count convention explicit instead of forcing
+tools to guess whether a displayed "Data Bytes" value includes the SMBus block
+count byte.
+
+### QODN217A0B interpretation
+
+The QODN217A0B quick-reference table lists `MFR_ID` as 5 data bytes while its
+published default value is the four-character string `OMPW`. The reference IR
+therefore records four semantic content bytes plus one count-prefix byte, and
+applies the same table-counting convention to the adjacent standard MFR block
+string rows.
+
+`MFR_MOD_DATE_LOC_SN` is intentionally different: its detailed command text
+states read support for a 12-byte block, while the quick-reference table also
+shows `DATA BYTES = 12`. Because the standard MFR rows suggest that the table
+count includes the count prefix, those two source statements create an
+ambiguity. The reference IR treats the detailed 12-byte statement as the
+semantic content length and preserves the table ambiguity under
+`source_conflicts` rather than silently reducing it to 11 bytes.
+
+## String and block validation
 
 Data IR v0.1 requires:
 
-- string data to declare a positive `bytes` count;
+- string data to declare a positive content length;
 - string data to declare an `encoding`;
 - string commands to use `read_block` or `write_block` transaction semantics;
-- all block transactions to declare a positive data-byte count;
-- a literal default string not to exceed the declared byte count.
-
-The validator deliberately does not infer vendor-specific padding, terminator,
-or block-count-byte conventions that are not explicitly represented in the IR.
+- every block transaction to provide `data.block` metadata;
+- `data.bytes` to equal `block.content_bytes`;
+- one count-prefix byte;
+- `transaction_payload_bytes = content_bytes + 1`;
+- block metadata not to appear on non-block transactions;
+- a literal default string not to exceed `content_bytes`.
 
 ## Validation versus PMBus normative semantics
 
 The Data IR validator checks that the **document is internally consistent**.
-It does not attempt to prove that a command follows every normative rule in
-the PMBus specification, and it does not embed a copied command-definition
-database.
-
-For example, the validator can determine that a LINEAR11 command declares one
-byte when its selected representation requires two. It does not infer that an
-unlisted device command is unsupported or replace source-specific behavior
-with normative PMBus defaults.
+It does not attempt to reproduce the PMBus command-definition database or to
+infer undocumented vendor framing conventions. When a source's length
+convention is ambiguous, the IR records the interpretation and preserves the
+conflict explicitly.
