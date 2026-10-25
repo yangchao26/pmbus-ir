@@ -32,7 +32,11 @@ def _iter_named_command_refs(
     if isinstance(node, Mapping):
         for key, value in node.items():
             current = path_parts + (key,)
-            if isinstance(value, str) and (key == "command" or key.endswith("_command")):
+            if (
+                isinstance(key, str)
+                and isinstance(value, str)
+                and (key == "command" or key.endswith("_command"))
+            ):
                 yield _path(*current), value
             else:
                 yield from _iter_named_command_refs(value, current)
