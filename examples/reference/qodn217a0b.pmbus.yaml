@@ -1,20 +1,16 @@
-ir_version: "0.1"
-
+ir_version: '0.1'
 document:
   kind: reference_implementation
   status: experimental
   canonical_format: yaml
   source_basis: public_datasheet
-  completeness:
-    supported_commands: complete_per_datasheet_quick_reference
-    behavioral_details: best_effort_from_public_datasheet
-    undocumented_fields: not_inferred
-
+  command_model: v0.1
+  completeness: {supported_commands: complete_per_datasheet_quick_reference, supported_command_count: 48, behavioral_details: best_effort_from_public_datasheet, undocumented_fields: not_inferred}
 source:
   vendor: OmniOn Power
   document: QODN217A0B_PDS
-  title: "QODN217A0B: Osprey Series DC-DC Converter"
-  revision: "3.4"
+  title: 'QODN217A0B: Osprey Series DC-DC Converter'
+  revision: '3.4'
   copyright_year: 2025
   relevant_pages:
     product_overview: [1, 2, 3, 4, 5]
@@ -23,83 +19,46 @@ source:
     command_details: [20, 21, 22, 23, 24, 25, 26, 27, 28]
     command_quick_reference: [29, 30]
   interpretation_policy:
-    - "Only behavior explicitly supported by the public datasheet is encoded as fact."
-    - "Conflicting statements in the datasheet are retained under source_conflicts instead of silently reconciled."
-    - "PMBus normative semantics are referenced by command identity and are not reproduced here."
-
+  - Only behavior explicitly supported by the public datasheet is encoded as fact.
+  - Conflicting statements in the datasheet are retained under source_conflicts instead of silently reconciled.
+  - PMBus normative semantics are referenced by command identity and are not reproduced here.
 device:
   manufacturer: OmniOn Power
   model: QODN217A0B
   series: Osprey
   class: dc_dc_power_module
-  topology:
-    isolation: non_isolated
-    regulation: regulated
+  topology: {isolation: non_isolated, regulation: regulated}
   power:
-    input_voltage_v:
-      min: 40
-      nominal: 54
-      max: 60
-    output_voltage_v:
-      nominal: 12
-      programmable_min: 9.5
-      programmable_max: 12.5
-    output_current_a:
-      max: 217
-    output_power_w:
-      max_continuous: 2600
-  interface_features:
-    pmbus: true
-    smbus_alert: true
-    firmware_update_over_i2c: true
-    black_box: true
+    input_voltage_v: {min: 40, nominal: 54, max: 60}
+    output_voltage_v: {nominal: 12, programmable_min: 9.5, programmable_max: 12.5}
+    output_current_a: {max: 217}
+    output_power_w: {max_continuous: 2600}
+  interface_features: {pmbus: true, smbus_alert: true, firmware_update_over_i2c: true, black_box: true}
   variant_scope:
-    model_pattern: "QODN217A0B*"
-    variant_dependent_semantics:
-      - remote_on_off_polarity
-      - vout_droop_default
-      - default_fault_protection_mode
-      - power_good_polarity
-
+    model_pattern: QODN217A0B*
+    variant_dependent_semantics: [remote_on_off_polarity, vout_droop_default, default_fault_protection_mode, power_good_polarity]
 standards:
   pmbus:
-    datasheet_cover_claim: "Rev. 1.3 compliance"
-    digital_interface_command_subset_basis: "PMBus 1.2"
-    revision_command:
-      command: PMBUS_REVISION
-      raw_default: "0x22"
-      part_i: "1.2"
-      part_ii: "1.2"
-    note: "The datasheet simultaneously claims PMBus Rev.1.3 compliance and describes a PMBus 1.2 command subset with PMBUS_REVISION = 0x22. Both statements are preserved."
-  smbus:
-    connection_guidance_revision: "2.0"
-
+    datasheet_cover_claim: Rev. 1.3 compliance
+    digital_interface_command_subset_basis: PMBus 1.2
+    revision_command: {command: PMBUS_REVISION, raw_default: '0x22', part_i: '1.2', part_ii: '1.2'}
+    note: The datasheet simultaneously claims PMBus Rev.1.3 compliance and describes a PMBus 1.2 command subset with PMBUS_REVISION = 0x22. Both statements are preserved.
+  smbus: {connection_guidance_revision: '2.0'}
 transport:
   interface: pmbus
   role: slave
   signaling:
-    clk_data_voltage_v:
-      input_high_min: 2.1
-      input_low_max: 0.8
-      absolute_max: 3.6
+    clk_data_voltage_v: {input_high_min: 2.1, input_low_max: 0.8, absolute_max: 3.6}
     smbalert_active_level: low
   bus_frequency_khz:
     min: 5
     max: 400
     stated_supported_timing_classes: [100, 400]
-    note: "5-10 kHz operation is documented to accommodate hosts that do not support clock stretching."
-  clock_stretching:
-    supported: true
-    max_clock_low_period_ms: 35
-  pec:
-    supported: true
-    checks_master_pec_when_provided: true
-    response_behavior: "PEC byte included in all responses to the master"
-  byte_order:
-    word_data: low_byte_first
-  direct_format:
-    supported: false
-
+    note: 5-10 kHz operation is documented to accommodate hosts that do not support clock stretching.
+  clock_stretching: {supported: true, max_clock_low_period_ms: 35}
+  pec: {supported: true, checks_master_pec_when_provided: true, response_behavior: PEC byte included in all responses to the master}
+  byte_order: {word_data: low_byte_first}
+  direct_format: {supported: false}
 addressing:
   method: external_resistor
   pin: ADDR1
@@ -107,39 +66,33 @@ addressing:
   address_width_bits: 7
   resistor_tolerance_percent: 1
   valid_addresses:
-    - {address: 96, resistor_kohm: 10}
-    - {address: 97, resistor_kohm: 15}
-    - {address: 98, resistor_kohm: 21}
-    - {address: 99, resistor_kohm: 28}
-    - {address: 100, resistor_kohm: 35.7}
-    - {address: 101, resistor_kohm: 45.3}
-    - {address: 102, resistor_kohm: 56.2}
-    - {address: 103, resistor_kohm: 69.8}
-    - {address: 104, resistor_kohm: 88.7}
-    - {address: 105, resistor_kohm: 107}
-    - {address: 106, resistor_kohm: 130}
-    - {address: 107, resistor_kohm: 158}
-    - {address: 108, resistor_kohm: 191}
-    - {address: 109, resistor_kohm: 232}
+  - {address: 96, resistor_kohm: 10}
+  - {address: 97, resistor_kohm: 15}
+  - {address: 98, resistor_kohm: 21}
+  - {address: 99, resistor_kohm: 28}
+  - {address: 100, resistor_kohm: 35.7}
+  - {address: 101, resistor_kohm: 45.3}
+  - {address: 102, resistor_kohm: 56.2}
+  - {address: 103, resistor_kohm: 69.8}
+  - {address: 104, resistor_kohm: 88.7}
+  - {address: 105, resistor_kohm: 107}
+  - {address: 106, resistor_kohm: 130}
+  - {address: 107, resistor_kohm: 158}
+  - {address: 108, resistor_kohm: 191}
+  - {address: 109, resistor_kohm: 232}
   out_of_range_address: 127
-  page_model:
-    logical_outputs: 1
-    page_command_documented: false
-    note: "No PAGE command appears in the supported-command table."
+  page_model: {logical_outputs: 1, page_command_documented: false, note: No PAGE command appears in the supported-command table.}
   smbus_alert_response:
     supported: true
     ara_response_factory_default: disabled
     default_alert_behavior: retain_resistor_programmed_address
     clear_alert_command: CLEAR_FAULTS
-    multi_module_constraint: "When ARA is used, the datasheet requires the module associated with the active alert to be at the lowest programmed address because the module does not arbitrate response-bus contention."
-
+    multi_module_constraint: When ARA is used, the datasheet requires the module associated with the active alert to be at the lowest programmed address because the module does not arbitrate response-bus contention.
 data_formats:
   vout_linear:
     wire_bytes: 2
     mantissa: unsigned_16_bit
-    exponent:
-      fixed: -12
-      source: VOUT_MODE
+    exponent: {fixed: -12, source: VOUT_MODE}
     resolution_v: 0.000244140625
   linear11:
     wire_bytes: 2
@@ -147,849 +100,606 @@ data_formats:
     exponent: signed_5_bit_twos_complement
     device_policy: fixed_per_command
     exponent_programmable: false
-  strings:
-    encoding: 8_bit_character
-    transport: block_read
-
+  strings: {encoding: 8_bit_character, transport: block_read}
 commands:
   OPERATION:
-    code: "0x01"
+    code: 1
     origin: standard
     support: partial
+    roles: [operation]
     access: read_write
-    transaction: read_write_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0x88"
-    supported_functions:
-      immediate_on_off: true
-      margin_act_on_fault: true
-      soft_off_with_sequencing: false
-      margin_ignore_fault: false
-    bits:
-      7: {name: ON, access: read_write, default: 1}
-      6: {name: reserved_or_unsupported, access: read_only, default: 0}
-      5: {name: margin_control_bit_5, access: read_write, default: 0}
-      4: {name: margin_control_bit_4, access: read_write, default: 0}
-      3: {name: unsupported, access: read_only, default: 1}
-      2: {name: unsupported, access: read_only, default: 0}
-      1: {name: unsupported, access: read_only, default: 0}
-      0: {name: unsupported, access: read_only, default: 0}
-    behavior:
-      on_requires_hardware_on_off_pin_on: true
-      margin_patterns:
-        margin_off: "00XX"
-        margin_low_act_on_fault: "0110"
-        margin_high_act_on_fault: "1010"
-
-  ON_OFF_CONFIG:
-    code: "0x02"
-    origin: standard
-    support: partial
-    access: read_only
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw_negative_logic: "0x1D"
-    bits:
-      4: {name: pu, access: read_only, fixed: 1}
-      3: {name: cmd, access: read_only, fixed: 1, meaning: "respond to OPERATION.ON"}
-      2: {name: cpr, access: read_only, fixed: 1}
-      1: {name: polarity, access: read_only, source: module_code, values: {0: negative_logic, 1: positive_logic}}
-      0: {name: cpa, access: read_only, fixed: 1}
-    behavior:
-      cmd_0: "OPERATION.ON ignored; control by hardware ON/OFF pin only"
-      cmd_1: "OPERATION.ON honored when hardware ON/OFF pin is in the ON state"
-
-  CLEAR_FAULTS:
-    code: "0x03"
-    origin: standard
-    support: full
-    access: execute
-    transaction: send_byte
-    data: {type: none, bytes: 0}
-    side_effects:
-      - clear_supported_status_flags
-      - retire_active_smbalert
-
-  WRITE_PROTECT:
-    code: "0x10"
-    origin: standard
-    support: full
-    access: read_write
-    transaction: read_write_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0x00"
-
-  STORE_DEFAULT_ALL:
-    code: "0x11"
-    origin: standard
-    support: full
-    access: execute
-    transaction: send_byte
-    data: {type: none, bytes: 0}
-    behavior:
-      stores_to: eeprom
-      execution_time_ms_max: 500
-      command_quiet_time_required: true
-
-  RESTORE_DEFAULT_ALL:
-    code: "0x12"
-    origin: standard
-    support: full
-    access: execute
-    transaction: send_byte
-    data: {type: none, bytes: 0}
-    behavior:
-      restores_from: eeprom
-      execution_time_ms_max: 500
-      command_quiet_time_required: true
-
-  CAPABILITY:
-    code: "0x19"
-    origin: standard
-    support: supported
-    access: read_only
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0xB0"
-    decoded_bits: not_reproduced_from_normative_spec
-
-  VOUT_MODE:
-    code: "0x20"
-    origin: standard
-    support: supported
-    access: read_only
-    transaction: read_byte
+    transaction: {read: read_byte, write: write_byte}
     data:
-      type: mode_and_exponent
+      kind: bit_field
       bytes: 1
-      mode: linear
-      exponent: -12
-    default_raw: "0x14"
-
+      bits:
+        '7': {name: 'ON', access: read_write, default: 1}
+        '5': {name: MARGIN_CONTROL_BIT_5, access: read_write, default: 0}
+        '4': {name: MARGIN_CONTROL_BIT_4, access: read_write, default: 0}
+    default: {raw: '0x88'}
+    limitations: [Soft off with sequencing is not supported., Margining with Ignore Fault is not supported.]
+    behavior:
+      immediate_on_off_supported: true
+      margin_act_on_fault_supported: true
+      on_requires_hardware_on_off_pin_on: true
+      margin_patterns: {margin_off: 00XX, margin_low_act_on_fault: '0110', margin_high_act_on_fault: '1010'}
+  ON_OFF_CONFIG:
+    code: 2
+    origin: standard
+    support: partial
+    roles: [operation, configuration]
+    access: read_only
+    transaction: {read: read_byte}
+    data:
+      kind: bit_field
+      bytes: 1
+      bits:
+        '4': {name: PU, access: read_only, fixed: 1}
+        '3': {name: CMD, access: read_only, fixed: 1}
+        '2': {name: CPR, access: read_only, fixed: 1}
+        '1': {name: POLARITY, access: read_only, source: module_code, values: {'0': negative_logic, '1': positive_logic}}
+        '0': {name: CPA, access: read_only, fixed: 1}
+    default:
+      cases:
+      - when: {remote_on_off_logic: negative}
+        raw: '0x1D'
+      - when: {remote_on_off_logic: positive}
+        description: Bit 1 reflects positive logic; raw value not explicitly listed in quick-reference table.
+    limitations: [Only the polarity indication varies with module code; other documented bits are fixed/read-only.]
+    behavior: {cmd_0: OPERATION.ON ignored; hardware ON/OFF pin controls output., cmd_1: OPERATION.ON honored when hardware ON/OFF pin is in ON state (documented default).}
+  CLEAR_FAULTS:
+    code: 3
+    origin: standard
+    support: full
+    roles: [status, operation]
+    access: execute
+    transaction: {write: send_byte}
+    data: {kind: none, bytes: 0}
+    behavior: {side_effects: [clear_supported_status_flags, retire_active_smbalert]}
+  WRITE_PROTECT:
+    code: 16
+    origin: standard
+    support: full
+    roles: [configuration]
+    access: read_write
+    transaction: {read: read_byte, write: write_byte}
+    data: {kind: bit_field, bytes: 1}
+    default: {raw: '0x00'}
+    notes: [The datasheet separately states that manufacturer-gated write protection is enabled by default through MFR_DEVICE_TYPE.WPE.]
+  STORE_DEFAULT_ALL:
+    code: 17
+    origin: standard
+    support: full
+    roles: [persistence]
+    access: execute
+    transaction: {write: send_byte}
+    data: {kind: none, bytes: 0}
+    timing: {execution_time_ms: {max: 500}, block_further_commands_until_complete: true}
+    behavior: {stores_operating_parameters_to: EEPROM}
+  RESTORE_DEFAULT_ALL:
+    code: 18
+    origin: standard
+    support: full
+    roles: [persistence]
+    access: execute
+    transaction: {write: send_byte}
+    data: {kind: none, bytes: 0}
+    timing: {execution_time_ms: {max: 500}, block_further_commands_until_complete: true}
+    behavior: {restores_operating_parameters_from: EEPROM}
+  CAPABILITY:
+    code: 25
+    origin: standard
+    support: full
+    roles: [capability]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1}
+    default: {raw: '0xB0'}
+    notes: [Bit meanings are not reproduced from the normative PMBus specification in this reference IR.]
+  VOUT_MODE:
+    code: 32
+    origin: standard
+    support: full
+    roles: [configuration, capability]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: structured, bytes: 1, fields: {mode: {value: linear}, exponent: {value: -12, representation: twos_complement}}}
+    default: {raw: '0x14'}
   VOUT_COMMAND:
-    code: "0x21"
+    code: 33
     origin: standard
-    support: supported
+    support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: vout_linear
-      range: {min: 9.5, max: 12.5}
-      resolution: 0.000244140625
-      default: 12.0
-      default_raw: "0xC000"
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: vout_linear, quantity: voltage, unit: V, range: {min: 9.5, max: 12.5}, resolution: 0.000244140625}
+    default: {value: 12.0, raw: '0xC000'}
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
   VOUT_MARGIN_HIGH:
-    code: "0x25"
+    code: 37
     origin: standard
     support: partial
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: vout_linear
-      range: {min: 8.2, max: 13.3}
-      default: 12.0
-    constraints:
-      - "must be greater than VOUT_MARGIN_LOW"
-    unsupported_functions: [margin_ignore_fault]
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: vout_linear, quantity: voltage, unit: V, range: {min: 8.2, max: 13.3}}
+    default: {value: 12.0}
+    constraints: [{kind: relation, operator: gt, other_command: VOUT_MARGIN_LOW}]
+    limitations: [Margin Ignore Fault mode is not supported.]
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
   VOUT_MARGIN_LOW:
-    code: "0x26"
+    code: 38
     origin: standard
     support: partial
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: vout_linear
-      range: {min: 8.1, max: 13.2}
-      default: 11.4
-    constraints:
-      - "must be less than VOUT_MARGIN_HIGH"
-    unsupported_functions: [margin_ignore_fault]
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: vout_linear, quantity: voltage, unit: V, range: {min: 8.1, max: 13.2}}
+    default: {value: 11.4}
+    constraints: [{kind: relation, operator: lt, other_command: VOUT_MARGIN_HIGH}]
+    limitations: [Margin Ignore Fault mode is not supported.]
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
   VOUT_DROOP:
-    code: "0x28"
+    code: 40
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: droop_slope
-      unit: mV_per_A
-      encoding: linear11
-      range: {min: 0, max: 5.0}
-      default:
-        without_A_or_P_option: 0
-        with_A_or_P_option: 1.7
-    persistence: not_specified
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: droop_slope, unit: mV_per_A, range: {min: 0, max: 5.0}}
+    default:
+      cases:
+      - when: {option_any: [-A, -P]}
+        value: 1.7
+      - when: {option_none: [-A, -P]}
+        value: 0
+    notes: [Persistence is not explicitly specified in the public datasheet.]
   VIN_ON:
-    code: "0x35"
+    code: 53
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: {type: linear11, fixed_exponent: -3}
-      range: {min: 35, max: 49}
-      step: 0.125
-      default: 37
-    constraints:
-      - "VIN_ON must be at least 2.0 V greater than VIN_OFF"
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format: {type: linear11, fixed_exponent: -3}, quantity: voltage, unit: V, range: {min: 35, max: 49}, step: 0.125}
+    default: {value: 37}
+    constraints: [{kind: relation, operator: ge, other_command: VIN_OFF, offset: 2.0, unit: V}]
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
   VIN_OFF:
-    code: "0x36"
+    code: 54
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: {type: linear11, fixed_exponent: -3}
-      range: {min: 32, max: 46}
-      step: 0.125
-      default: 35
-    constraints:
-      - "VIN_OFF must be lower than VIN_ON with at least 2.0 V hysteresis"
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format: {type: linear11, fixed_exponent: -3}, quantity: voltage, unit: V, range: {min: 32, max: 46}, step: 0.125}
+    default: {value: 35}
+    constraints: [{kind: relation, operator: le, other_command: VIN_ON, offset: -2.0, unit: V, description: VIN_OFF <= VIN_ON - 2 V.}]
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
   VOUT_OV_FAULT_LIMIT:
-    code: "0x40"
+    code: 64
     origin: standard
     support: full
+    roles: [configuration, protection_limit]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: vout_linear
-      range: {min: 10.9, max: 15.99}
-      default: 14
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: vout_linear, quantity: voltage, unit: V, range: {min: 10.9, max: 15.99}}
+    default: {value: 14}
     constraints:
-      - "must be greater than VOUT_COMMAND"
-      - "effective maximum is min(VOUT_COMMAND + 2 V, 15.99 V); module protection overrides a higher user setting"
-    persistence: not_specified
-    safety_note: "Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE."
-
+    - {kind: relation, operator: gt, other_command: VOUT_COMMAND}
+    - {kind: dynamic_limit, description: 'Effective maximum is min(VOUT_COMMAND + 2 V, 15.99 V); module protection overrides a higher user setting.'}
+    notes: [Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE.]
   VOUT_OV_FAULT_RESPONSE:
-    code: "0x41"
+    code: 65
     origin: standard
     support: partial
+    roles: [configuration, protection_response]
     access: read_write
-    transaction: read_write_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0xB8"
-    supported_response_bits: "RSP=10"
-    supported_retry_values: ["000", "111"]
-    supported_delay_bits: "000"
-    default_behavior:
-      action: shutdown
-      retry: continuous_restart
-      retry_interval_s: 4
-      protection_mode_variant_dependent: true
-
+    transaction: {read: read_byte, write: write_byte}
+    data: {kind: bit_field, bytes: 1}
+    default: {raw: '0xB8'}
+    constraints: [{kind: allowed_values, description: Only RSP=10, retry=000 or 111, and delay=000 are supported., values: ['RSP=10;RS=000;DT=000', 'RSP=10;RS=111;DT=000']}]
+    limitations: [No nonzero delay setting is supported., Only no-retry and continuous-retry modes are supported.]
+    behavior: {default_action: shutdown, default_retry: continuous_restart, default_retry_interval_s: 4, protection_mode_variant_dependent: true}
   IOUT_OC_FAULT_LIMIT:
-    code: "0x46"
+    code: 70
     origin: standard
     support: full
+    roles: [configuration, protection_limit]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: current
-      unit: A
-      encoding: linear11
-      range: {min: 50, max: 260}
-      default: 260
-    constraints:
-      - "must be greater than IOUT_OC_WARN_LIMIT"
-    persistence: not_specified
-    safety_note: "Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE."
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: current, unit: A, range: {min: 50, max: 260}}
+    default: {value: 260}
+    constraints: [{kind: relation, operator: gt, other_command: IOUT_OC_WARN_LIMIT}]
+    notes: [Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE.]
   IOUT_OC_FAULT_RESPONSE:
-    code: "0x47"
+    code: 71
     origin: standard
     support: partial
+    roles: [configuration, protection_response]
     access: read_write
-    transaction: read_write_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0xF8"
-    supported_response_bits: "RSP=11"
-    supported_retry_values: ["000", "111"]
-    supported_delay_bits: "000"
-    default_behavior:
-      action: shutdown
-      retry: continuous_restart
-      retry_interval_s: 4
-      protection_mode_variant_dependent: true
-
+    transaction: {read: read_byte, write: write_byte}
+    data: {kind: bit_field, bytes: 1}
+    default: {raw: '0xF8'}
+    constraints: [{kind: allowed_values, description: Only RSP=11, retry=000 or 111, and delay=000 are supported., values: ['RSP=11;RS=000;DT=000', 'RSP=11;RS=111;DT=000']}]
+    limitations: [No nonzero delay setting is supported., Only no-retry and continuous-retry modes are supported.]
+    behavior: {default_action: shutdown, default_retry: continuous_restart, default_retry_interval_s: 4, protection_mode_variant_dependent: true}
   IOUT_OC_WARN_LIMIT:
-    code: "0x4A"
+    code: 74
     origin: standard
     support: full
+    roles: [configuration, protection_limit]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: current
-      unit: A
-      encoding: linear11
-      range: {min: 25, max: 240}
-      default: 240
-    constraints:
-      - "must be less than IOUT_OC_FAULT_LIMIT"
-    persistence: not_specified
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: current, unit: A, range: {min: 25, max: 240}}
+    default: {value: 240}
+    constraints: [{kind: relation, operator: lt, other_command: IOUT_OC_FAULT_LIMIT}]
   OT_FAULT_LIMIT:
-    code: "0x4F"
+    code: 79
     origin: standard
     support: full
+    roles: [configuration, protection_limit]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: temperature
-      unit: degC
-      encoding: linear11
-      range: {min: 26, max: 130}
-      default: 121
-    constraints:
-      - "must be greater than OT_WARN_LIMIT"
-    persistence: not_specified
-    safety_note: "Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE."
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: temperature, unit: degC, range: {min: 26, max: 130}}
+    default: {value: 121}
+    constraints: [{kind: relation, operator: gt, other_command: OT_WARN_LIMIT}]
+    notes: [Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE.]
   OT_FAULT_RESPONSE:
-    code: "0x50"
+    code: 80
     origin: standard
     support: partial
+    roles: [configuration, protection_response]
     access: read_write
-    transaction: read_write_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0xB8"
-    supported_response_bits: "RSP=10"
-    supported_retry_values: ["000", "111"]
-    supported_delay_bits: "000"
-    default_behavior:
-      action: shutdown
-      retry: continuous_restart
-      delay_cycles: 0
-
+    transaction: {read: read_byte, write: write_byte}
+    data: {kind: bit_field, bytes: 1}
+    default: {raw: '0xB8'}
+    constraints: [{kind: allowed_values, description: Only RSP=10, retry=000 or 111, and delay=000 are supported., values: ['RSP=10;RS=000;DT=000', 'RSP=10;RS=111;DT=000']}]
+    limitations: [No nonzero delay setting is supported., Only no-retry and continuous-retry modes are supported.]
+    behavior: {default_action: shutdown, default_retry: continuous_restart, default_delay_cycles: 0}
   OT_WARN_LIMIT:
-    code: "0x51"
+    code: 81
     origin: standard
     support: full
+    roles: [configuration, protection_limit]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: temperature
-      unit: degC
-      encoding: linear11
-      range: {min: 25, max: 125}
-      default: 116
-    constraints:
-      - "must be less than OT_FAULT_LIMIT"
-    persistence: not_specified
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: temperature, unit: degC, range: {min: 25, max: 125}}
+    default: {value: 116}
+    constraints: [{kind: relation, operator: lt, other_command: OT_FAULT_LIMIT}]
   VIN_OV_FAULT_LIMIT:
-    code: "0x55"
+    code: 85
     origin: standard
     support: full
+    roles: [configuration, protection_limit]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: linear11
-      range: {min: 48, max: 65}
-      default: 63
-    persistence: not_specified
-    safety_note: "Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE."
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: voltage, unit: V, range: {min: 48, max: 65}}
+    default: {value: 63}
+    notes: [Datasheet advises customers not to update fault-limit values before contacting OmniOn Power FAE.]
   POWER_GOOD_ON:
-    code: "0x5E"
+    code: 94
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: vout_linear
-      range: {min: 9.2, max: 11.7}
-      default: 11.4
-    constraints:
-      - "must be at least 0.5 V greater than POWER_GOOD_OFF"
-    persistence: not_specified
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: vout_linear, quantity: voltage, unit: V, range: {min: 9.2, max: 11.7}}
+    default: {value: 11.4}
+    constraints: [{kind: relation, operator: ge, other_command: POWER_GOOD_OFF, offset: 0.5, unit: V}]
   POWER_GOOD_OFF:
-    code: "0x5F"
+    code: 95
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: voltage
-      unit: V
-      encoding: vout_linear
-      range: {min: 7.6, max: 10.1}
-      default: 9.8
-    constraints:
-      - "must be at least 0.5 V lower than POWER_GOOD_ON"
-    persistence: not_specified
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format_ref: vout_linear, quantity: voltage, unit: V, range: {min: 7.6, max: 10.1}}
+    default: {value: 9.8}
+    constraints: [{kind: relation, operator: le, other_command: POWER_GOOD_ON, offset: -0.5, unit: V, description: POWER_GOOD_OFF <= POWER_GOOD_ON - 0.5 V.}]
   TON_DELAY:
-    code: "0x60"
+    code: 96
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: time
-      unit: ms
-      encoding: {type: linear11, fixed_exponent: -1}
-      published_range: {min: 0, max: 500}
-      normal_programming_range_from_narrative: {min: 10, max: 500}
-      resolution: 0.5
-      default: 0
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format: {type: linear11, fixed_exponent: -1}, quantity: time, unit: ms, range: {min: 0, max: 500}, resolution: 0.5}
+    default: {value: 0}
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
+    notes: ['Narrative text states a programmable range of 10 ms to 500 ms, while command detail/quick-reference permits 0 ms; the document-level source conflict preserves both.']
   TON_RISE:
-    code: "0x61"
+    code: 97
     origin: standard
     support: full
+    roles: [configuration]
     access: read_write
-    transaction: read_write_word
-    value:
-      quantity: time
-      unit: ms
-      encoding: {type: linear11, fixed_exponent: -1}
-      published_command_detail_range: {min: 12, max: 500}
-      narrative_programming_range: {min: 15, max: 500}
-      resolution: 0.5
-      default: 25
-    persistence: store_default_all
-
+    transaction: {read: read_word, write: write_word}
+    data: {kind: scalar, bytes: 2, format: {type: linear11, fixed_exponent: -1}, quantity: time, unit: ms, range: {min: 12, max: 500}, resolution: 0.5}
+    default: {value: 25}
+    persistence: {mode: nonvolatile_via_command, commit_command: STORE_DEFAULT_ALL, restore_command: RESTORE_DEFAULT_ALL}
+    notes: ['Narrative text states 15 ms to 500 ms, while the command detail lists 12 ms to 500 ms; the document-level source conflict preserves both.']
   STATUS_WORD:
-    code: "0x79"
+    code: 121
     origin: standard
     support: partial
+    roles: [status]
     access: read_only
-    transaction: read_word
-    data: {type: bit_field, bytes: 2}
-    unsupported_summary_categories: [fans, manufacturer_specific, unknown]
-    bits:
-      15: VOUT
-      14: IOUT_or_POUT
-      13: INPUT
-      12: unsupported
-      11: POWER_GOOD_negated
-      10: unsupported
-      9: unsupported
-      8: unsupported
-      7: unsupported
-      6: OUTPUT_OFF
-      5: VOUT_OV_FAULT
-      4: IOUT_OC_FAULT
-      3: VIN_UV_FAULT
-      2: TEMPERATURE
-      1: CML
-      0: unsupported
-
+    transaction: {read: read_word}
+    data:
+      kind: bit_field
+      bytes: 2
+      bits:
+        '15': {name: VOUT, access: read_only, supported: true}
+        '14': {name: IOUT_OR_POUT, access: read_only, supported: true}
+        '13': {name: INPUT, access: read_only, supported: true}
+        '11': {name: POWER_GOOD_NEGATED, access: read_only, supported: true}
+        '6': {name: OUTPUT_OFF, access: read_only, supported: true}
+        '5': {name: VOUT_OV_FAULT, access: read_only, supported: true}
+        '4': {name: IOUT_OC_FAULT, access: read_only, supported: true}
+        '3': {name: VIN_UV_FAULT, access: read_only, supported: true}
+        '2': {name: TEMPERATURE, access: read_only, supported: true}
+        '1': {name: CML, access: read_only, supported: true}
+    limitations: ['Fan, manufacturer-specific, and unknown summary categories are not supported.']
   STATUS_VOUT:
-    code: "0x7A"
+    code: 122
     origin: standard
     support: partial
-    access: read_only_resettable
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    supported_bits:
-      7: VOUT_OV_FAULT
-      4: VOUT_UV_FAULT
-    reset_supported: true
-
+    roles: [status]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1, bits: {'7': {name: VOUT_OV_FAULT, access: read_only, supported: true}, '4': {name: VOUT_UV_FAULT, access: read_only, supported: true}}}
+    behavior: {supported_flags_resettable: true, clear_command: CLEAR_FAULTS}
   STATUS_IOUT:
-    code: "0x7B"
+    code: 123
     origin: standard
     support: partial
-    access: read_only_resettable
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    supported_bits:
-      7: IOUT_OC_FAULT
-      5: IOUT_OC_WARN
-    reset_supported: true
-
+    roles: [status]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1, bits: {'7': {name: IOUT_OC_FAULT, access: read_only, supported: true}, '5': {name: IOUT_OC_WARN, access: read_only, supported: true}}}
+    behavior: {supported_flags_resettable: true, clear_command: CLEAR_FAULTS}
   STATUS_INPUT:
-    code: "0x7C"
+    code: 124
     origin: standard
     support: partial
-    access: read_only_resettable
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    supported_bits:
-      7: VIN_OV_FAULT
-      4: VIN_UV_FAULT
-      3: UNIT_OFF_LOW_INPUT_VOLTAGE
-    reset_supported: true
-
+    roles: [status]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1, bits: {'7': {name: VIN_OV_FAULT, access: read_only, supported: true}, '4': {name: VIN_UV_FAULT, access: read_only, supported: true}, '3': {name: UNIT_OFF_LOW_INPUT_VOLTAGE, access: read_only, supported: true}}}
+    behavior: {supported_flags_resettable: true, clear_command: CLEAR_FAULTS}
   STATUS_TEMPERATURE:
-    code: "0x7D"
+    code: 125
     origin: standard
     support: partial
-    access: read_only_resettable
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    supported_bits:
-      7: OT_FAULT
-      6: OT_WARN
-    reset_supported: true
-
+    roles: [status]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1, bits: {'7': {name: OT_FAULT, access: read_only, supported: true}, '6': {name: OT_WARN, access: read_only, supported: true}}}
+    behavior: {supported_flags_resettable: true, clear_command: CLEAR_FAULTS}
   STATUS_CML:
-    code: "0x7E"
+    code: 126
     origin: standard
     support: partial
-    access: read_only_resettable
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    supported_bits:
-      7: INVALID_OR_UNSUPPORTED_COMMAND
-      6: INVALID_OR_UNSUPPORTED_DATA
-      5: PEC_FAILED
-    reset_supported: true
-
+    roles: [status]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1, bits: {'7': {name: INVALID_OR_UNSUPPORTED_COMMAND, access: read_only, supported: true}, '6': {name: INVALID_OR_UNSUPPORTED_DATA, access: read_only, supported: true}, '5': {name: PEC_FAILED, access: read_only, supported: true}}}
+    behavior: {supported_flags_resettable: true, clear_command: CLEAR_FAULTS}
   READ_VIN:
-    code: "0x88"
+    code: 136
     origin: standard
     support: full
+    roles: [telemetry]
     access: read_only
-    transaction: read_word
-    value:
+    transaction: {read: read_word}
+    data:
+      kind: scalar
+      bytes: 2
+      format: {type: linear11, fixed_exponent: -3}
       quantity: voltage
       unit: V
-      encoding: {type: linear11, fixed_exponent: -3}
       range: {min: 0, max: 127.875}
       resolution: 0.125
-      accuracy_percent: {min: -4, typ: 0.8, max: 4}
-    calibration:
-      offset_command: MFR_VIN_READ_CAL_OFFSET
-      gain_command: MFR_VIN_READ_CAL_GAIN
-      commands_documented_but_not_listed_in_supported_command_table: true
-
+      accuracy: {percent: {min: -4, typ: 0.8, max: 4}}
+    behavior: {calibration: {offset_command: MFR_VIN_READ_CAL_OFFSET, gain_command: MFR_VIN_READ_CAL_GAIN, commands_not_in_supported_quick_reference: true}}
   READ_VOUT:
-    code: "0x8B"
+    code: 139
     origin: standard
     support: full
+    roles: [telemetry]
     access: read_only
-    transaction: read_word
-    value:
+    transaction: {read: read_word}
+    data:
+      kind: scalar
+      bytes: 2
+      format_ref: vout_linear
       quantity: voltage
       unit: V
-      encoding: vout_linear
       range: {min: 0, max: 15.9997}
       resolution: 0.000244
-      accuracy_percent: {min: -2, typ: 0.6, max: 2}
-    calibration:
-      offset_command: MFR_VOUT_READ_CAL_OFFSET
-      command_documented_but_not_listed_in_supported_command_table: true
-
+      accuracy: {percent: {min: -2, typ: 0.6, max: 2}}
+    behavior: {calibration: {offset_command: MFR_VOUT_READ_CAL_OFFSET, command_not_in_supported_quick_reference: true}}
   READ_IOUT:
-    code: "0x8C"
+    code: 140
     origin: standard
     support: full
+    roles: [telemetry]
     access: read_only
-    transaction: read_word
-    value:
+    transaction: {read: read_word}
+    data:
+      kind: scalar
+      bytes: 2
+      format: {type: linear11, fixed_exponent: -3}
       quantity: current
       unit: A
-      encoding: {type: linear11, fixed_exponent: -3}
       range: {min: 0, max: 217}
-      published_resolution_a: 0.146
-      behavior:
-        blank_below_a: 20
-        negative_or_sinking_current_reported_as_a: 0
-        measurement: average_output_current
-        temperature_corrected: true
+      resolution: 0.146
       accuracy:
-        at_25_to_85_degC:
-          up_to_108A: {absolute_a: 8}
-          above_108A_to_217A: {percent: 8}
-        at_minus40_to_below25_degC:
-          up_to_108A: {absolute_a: 10}
-          above_108A_to_217A: {percent: 10}
-    calibration:
-      offset_command: MFR_IOUT_CAL_OFFSET
-      gain_command: MFR_IOUT_CAL_GAIN
-      commands_documented_but_not_listed_in_supported_command_table: true
-
-  READ_TEMP1:
-    code: "0x8D"
-    canonical_name: READ_TEMPERATURE_1
-    origin: standard
-    support: full
-    access: read_only
-    transaction: read_word
-    value:
-      quantity: temperature
-      unit: degC
-      encoding: {type: linear11, fixed_exponent: -2}
-      resolution: 0.25
-      accuracy_degC: {min: -5, max: 5}
-    sensor_location: "close to module hot spot TH1"
-    interpretation_note: "Reading is strongly influenced by module load and airflow and is not ambient temperature."
-
-  PMBUS_REVISION:
-    code: "0x98"
-    origin: standard
-    support: full
-    access: read_only
-    transaction: read_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0x22"
-    decoded:
-      part_i: "1.2"
-      part_ii: "1.2"
-
-  MFR_ID:
-    code: "0x99"
-    origin: standard_identification
-    support: supported
-    access: read_only
-    transaction: read_block
-    data: {type: string, declared_data_bytes: 5, encoding: 8_bit_character}
-    default: OMPW
-
-  MFR_MODEL:
-    code: "0x9A"
-    origin: standard_identification
-    support: supported
-    access: read_only
-    transaction: read_block
-    data: {type: string, declared_data_bytes: 18, encoding: 8_bit_character}
-    default: not_specified
-
-  MFR_REVISION:
-    code: "0x9B"
-    origin: standard_identification
-    support: supported
-    access: read_only
-    transaction: read_block
-    data: {type: string, declared_data_bytes: 8, encoding: 8_bit_character}
-    default: not_specified
-
-  MFR_LOCATION:
-    code: "0x9C"
-    origin: standard_identification
-    support: supported
-    access: read_only
-    transaction: read_block
-    data: {type: string, declared_data_bytes: 12, encoding: 8_bit_character}
-    default: not_specified
-
-  MFR_DATE:
-    code: "0x9D"
-    origin: standard_identification
-    support: supported
-    access: read_only
-    transaction: read_block
-    data: {type: string, declared_data_bytes: 6, encoding: 8_bit_character}
-    default: not_specified
-
-  MFR_SERIAL:
-    code: "0x9E"
-    origin: standard_identification
-    support: supported
-    access: read_only
-    transaction: read_block
-    data: {type: string, declared_data_bytes: 18, encoding: 8_bit_character}
-    default: not_specified
-
-  MFR_DEVICE_TYPE:
-    code: "0xD0"
-    origin: manufacturer_specific
-    support: partial
-    access: read_write
-    transaction: read_write_word
-    data: {type: custom_bit_field, bytes: 2}
-    default_raw: "0x0152"
-    fields:
-      high_byte_7_1: reserved
-      high_byte_0: module_name_1
-      low_byte_7_2: module_name_0
-      low_byte_1:
-        name: WPE
-        meanings: {0: write_protect_enable_not_active, 1: write_protect_enable_active}
-      low_byte_0: reserved
-    module_designation_bits: "1010100"
-    module_designation: QODN217A0Bxxx
+        25_to_85_degC: {0_to_108A: {absolute_a: 8}, 108_to_217A: {percent: 8}}
+        minus40_to_below25_degC: {0_to_108A: {absolute_a: 10}, 108_to_217A: {percent: 10}}
     behavior:
-      controls_manufacturer_write_protect_gate: true
-      write_protect_enabled_by_default: true
-
-  MFR_FW_REV:
-    code: "0xDB"
-    origin: manufacturer_specific
-    support: full_read
+      blank_below_a: 20
+      sinking_current_reported_as_a: 0
+      measurement: average_output_current
+      temperature_corrected: true
+      calibration: {offset_command: MFR_IOUT_CAL_OFFSET, gain_command: MFR_IOUT_CAL_GAIN, commands_not_in_supported_quick_reference: true}
+  READ_TEMPERATURE_1:
+    code: 141
+    origin: standard
+    support: full
+    roles: [telemetry]
+    aliases: [READ_TEMP1]
     access: read_only
-    transaction: ambiguous_in_datasheet
-    data:
-      type: firmware_revision
-      declared_data_bytes: 2
-      format: "four hexadecimal nibbles: major.minor.build_high.build_low"
-      example_raw: "0x1218"
-      example_decoded: "1.2.1.8"
-    default: current_version
-
-  MFR_PGOOD_POLARITY:
-    code: "0xE2"
+    transaction: {read: read_word}
+    data: {kind: scalar, bytes: 2, format: {type: linear11, fixed_exponent: -2}, quantity: temperature, unit: degC, resolution: 0.25, accuracy: {absolute_degC: {min: -5, max: 5}}}
+    behavior: {sensor_location: close to module hot spot TH1, interpretation: Reading is strongly influenced by module load and airflow and is not ambient temperature.}
+  PMBUS_REVISION:
+    code: 152
+    origin: standard
+    support: full
+    roles: [capability]
+    access: read_only
+    transaction: {read: read_byte}
+    data: {kind: bit_field, bytes: 1}
+    default: {raw: '0x22'}
+    behavior: {decoded: {part_i: '1.2', part_ii: '1.2'}}
+  MFR_ID:
+    code: 153
+    origin: standard
+    support: full
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: string, bytes: 5, encoding: 8_bit_character}
+    default: {value: OMPW}
+  MFR_MODEL:
+    code: 154
+    origin: standard
+    support: full
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: string, bytes: 18, encoding: 8_bit_character}
+  MFR_REVISION:
+    code: 155
+    origin: standard
+    support: full
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: string, bytes: 8, encoding: 8_bit_character}
+  MFR_LOCATION:
+    code: 156
+    origin: standard
+    support: full
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: string, bytes: 12, encoding: 8_bit_character}
+  MFR_DATE:
+    code: 157
+    origin: standard
+    support: full
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: string, bytes: 6, encoding: 8_bit_character}
+  MFR_SERIAL:
+    code: 158
+    origin: standard
+    support: full
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: string, bytes: 18, encoding: 8_bit_character}
+  MFR_DEVICE_TYPE:
+    code: 208
     origin: manufacturer_specific
     support: partial
+    roles: [manufacturer_control, identification, configuration]
     access: read_write
-    transaction: read_write_byte
-    data: {type: bit_field, bytes: 1}
-    default_raw: "0x01"
-    bits:
-      0:
-        name: PGOOD_logic
-        access: read_write
-        meanings:
-          0: negative_logic
-          1: positive_logic
-      7_1: reserved_read_only
-
-  MFR_MOD_DATE_LOC_SN:
-    code: "0xF0"
+    transaction: {read: read_word, write: write_word}
+    data:
+      kind: structured
+      bytes: 2
+      fields:
+        high_byte_7_1: {name: RESERVED}
+        high_byte_0: {name: MODULE_NAME_1}
+        low_byte_7_2: {name: MODULE_NAME_0}
+        low_byte_1: {name: WPE, values: {'0': write_protect_enable_not_active, '1': write_protect_enable_active}}
+        low_byte_0: {name: RESERVED}
+    default: {raw: '0x0152'}
+    limitations: [Datasheet describes partial support focused on module name/designation and write-protect enable.]
+    behavior: {module_designation_bits: '1010100', module_designation: QODN217A0Bxxx, controls_manufacturer_write_protect_gate: true, write_protect_enabled_by_default: true}
+  MFR_FW_REV:
+    code: 219
     origin: manufacturer_specific
-    support: read_support
+    support: full
+    roles: [identification]
     access: read_only
-    transaction: read_block
-    data: {type: block_string_or_structured_bytes, bytes: 12}
-    default: MS
-    access_condition:
-      lockout_per_mfr_device_type: true
-
+    transaction: {read: unknown}
+    data:
+      kind: structured
+      bytes: 2
+      fields: {major: {nibble: Mj}, minor: {nibble: Mn}, build_high: {nibble: Bh}, build_low: {nibble: Bl}}
+    default: {value: current_version}
+    source: {conflict: 'Detailed description defines a 2-byte/four-nibble value, while the quick-reference table labels transfer type as Read byte.'}
+    notes: [Example 0x1218 decodes as firmware revision 1.2.1.8.]
+  MFR_PGOOD_POLARITY:
+    code: 226
+    origin: manufacturer_specific
+    support: partial
+    roles: [manufacturer_control, configuration]
+    access: read_write
+    transaction: {read: read_byte, write: write_byte}
+    data: {kind: bit_field, bytes: 1, bits: {'0': {name: PGOOD_LOGIC, access: read_write, supported: true, values: {'0': negative_logic, '1': positive_logic}}}}
+    default: {raw: '0x01'}
+    limitations: [Only bit 0 is implemented as a writable function.]
+  MFR_MOD_DATE_LOC_SN:
+    code: 240
+    origin: manufacturer_specific
+    support: partial
+    roles: [identification]
+    access: read_only
+    transaction: {read: read_block}
+    data: {kind: structured, bytes: 12}
+    default: {value: MS}
+    conditions: [{kind: manufacturer_write_protect_gate, command: MFR_DEVICE_TYPE, field: WPE, source_wording: lockout per MFR_DEVICE_TYPE}]
+    source: {conflict: Detailed description says read support for a 12-byte block; quick-reference table labels transfer type as Read byte.}
+    notes: [Detailed description is preferred for transaction shape.]
 telemetry:
-  output_voltage:
-    command: READ_VOUT
-    range_v: {min: 0, max: 15.9997}
-    resolution_v: 0.000244
-    accuracy_percent: {min: -2, typ: 0.6, max: 2}
-  input_voltage:
-    command: READ_VIN
-    range_v: {min: 0, max: 127.875}
-    resolution_v: 0.125
-    accuracy_percent: {min: -4, typ: 0.8, max: 4}
-  output_current:
-    command: READ_IOUT
-    range_a: {min: 0, max: 217}
-    resolution_a: 0.146
-    blank_below_a: 20
-    sinking_current_reported_as_a: 0
-  temperature:
-    command: READ_TEMP1
-    resolution_degC: 0.25
-    accuracy_degC: {min: -5, max: 5}
-    sensor_location: near_TH1_hotspot
-
+  output_voltage: {command: READ_VOUT, range_v: {min: 0, max: 15.9997}, resolution_v: 0.000244, accuracy_percent: {min: -2, typ: 0.6, max: 2}}
+  input_voltage: {command: READ_VIN, range_v: {min: 0, max: 127.875}, resolution_v: 0.125, accuracy_percent: {min: -4, typ: 0.8, max: 4}}
+  output_current: {command: READ_IOUT, range_a: {min: 0, max: 217}, published_resolution_a: 0.146, blank_below_a: 20, sinking_current_reported_as_a: 0}
+  temperature: {command: READ_TEMPERATURE_1, resolution_degC: 0.25, accuracy_degC: {min: -5, max: 5}, sensor_location: near_TH1_hotspot}
 configuration:
-  output_voltage:
-    command: VOUT_COMMAND
-    range_v: {min: 9.5, max: 12.5}
-  output_margining:
-    high_command: VOUT_MARGIN_HIGH
-    low_command: VOUT_MARGIN_LOW
-    activation_command: OPERATION
-  input_uvlo:
-    on_command: VIN_ON
-    off_command: VIN_OFF
-    minimum_hysteresis_v: 2.0
-  input_ovlo:
-    fault_limit_command: VIN_OV_FAULT_LIMIT
-  output_overvoltage:
-    fault_limit_command: VOUT_OV_FAULT_LIMIT
-    response_command: VOUT_OV_FAULT_RESPONSE
-  output_overcurrent:
-    fault_limit_command: IOUT_OC_FAULT_LIMIT
-    warn_limit_command: IOUT_OC_WARN_LIMIT
-    response_command: IOUT_OC_FAULT_RESPONSE
-  overtemperature:
-    fault_limit_command: OT_FAULT_LIMIT
-    warn_limit_command: OT_WARN_LIMIT
-    response_command: OT_FAULT_RESPONSE
-  startup:
-    delay_command: TON_DELAY
-    rise_command: TON_RISE
-  power_good:
-    on_command: POWER_GOOD_ON
-    off_command: POWER_GOOD_OFF
-    polarity_command: MFR_PGOOD_POLARITY
-
+  output_voltage: {command: VOUT_COMMAND, range_v: {min: 9.5, max: 12.5}}
+  output_margining: {high_command: VOUT_MARGIN_HIGH, low_command: VOUT_MARGIN_LOW, activation_command: OPERATION}
+  input_uvlo: {on_command: VIN_ON, off_command: VIN_OFF, minimum_hysteresis_v: 2.0}
+  input_ovlo: {fault_limit_command: VIN_OV_FAULT_LIMIT}
+  output_overvoltage: {fault_limit_command: VOUT_OV_FAULT_LIMIT, response_command: VOUT_OV_FAULT_RESPONSE}
+  output_overcurrent: {fault_limit_command: IOUT_OC_FAULT_LIMIT, warn_limit_command: IOUT_OC_WARN_LIMIT, response_command: IOUT_OC_FAULT_RESPONSE}
+  overtemperature: {fault_limit_command: OT_FAULT_LIMIT, warn_limit_command: OT_WARN_LIMIT, response_command: OT_FAULT_RESPONSE}
+  startup: {delay_command: TON_DELAY, rise_command: TON_RISE}
+  power_good: {on_command: POWER_GOOD_ON, off_command: POWER_GOOD_OFF, polarity_command: MFR_PGOOD_POLARITY}
 status:
   summary_command: STATUS_WORD
-  detail_commands:
-    output_voltage: STATUS_VOUT
-    output_current: STATUS_IOUT
-    input: STATUS_INPUT
-    temperature: STATUS_TEMPERATURE
-    communications: STATUS_CML
+  detail_commands: {output_voltage: STATUS_VOUT, output_current: STATUS_IOUT, input: STATUS_INPUT, temperature: STATUS_TEMPERATURE, communications: STATUS_CML}
   clear_command: CLEAR_FAULTS
-
 faults:
   overcurrent:
-    physical_behavior:
-      current_limiting: continuous_capable
-      shutdown_trigger: "output voltage falls more than 2 V below VOUT setpoint during overcurrent"
-      default_recovery: continuous_restart_until_fault_clears
-      latched_option_available: true
-      latch_reset_methods:
-        - cycle_input_power
-        - toggle_on_off_pin_for_one_second
-    pmbus:
-      limit_command: IOUT_OC_FAULT_LIMIT
-      response_command: IOUT_OC_FAULT_RESPONSE
-      status_command: STATUS_IOUT
+    physical_behavior: {current_limiting: continuous_capable, shutdown_trigger: output voltage falls more than 2 V below VOUT setpoint during overcurrent, default_recovery: continuous_restart_until_fault_clears, latched_option_available: true, latch_reset_methods: [cycle_input_power, toggle_on_off_pin_for_one_second]}
+    pmbus: {limit_command: IOUT_OC_FAULT_LIMIT, response_command: IOUT_OC_FAULT_RESPONSE, status_command: STATUS_IOUT}
   output_overvoltage:
-    physical_behavior:
-      default_recovery: continuous_restart_until_fault_clears
-      latched_option_available: true
-      latch_reset_methods:
-        - cycle_input_power
-        - toggle_on_off_pin_for_one_second
-    pmbus:
-      limit_command: VOUT_OV_FAULT_LIMIT
-      response_command: VOUT_OV_FAULT_RESPONSE
-      status_command: STATUS_VOUT
+    physical_behavior: {default_recovery: continuous_restart_until_fault_clears, latched_option_available: true, latch_reset_methods: [cycle_input_power, toggle_on_off_pin_for_one_second]}
+    pmbus: {limit_command: VOUT_OV_FAULT_LIMIT, response_command: VOUT_OV_FAULT_RESPONSE, status_command: STATUS_VOUT}
   overtemperature:
-    physical_behavior:
-      action: shutdown
-      restart_after_cooling: true
-      approximate_restart_hysteresis_degC: 18
-    pmbus:
-      limit_command: OT_FAULT_LIMIT
-      warn_command: OT_WARN_LIMIT
-      response_command: OT_FAULT_RESPONSE
-      status_command: STATUS_TEMPERATURE
+    physical_behavior: {action: shutdown, restart_after_cooling: true, approximate_restart_hysteresis_degC: 18}
+    pmbus: {limit_command: OT_FAULT_LIMIT, warn_command: OT_WARN_LIMIT, response_command: OT_FAULT_RESPONSE, status_command: STATUS_TEMPERATURE}
   input_under_over_voltage:
-    physical_behavior:
-      outside_lockout_range: output_disabled
-      undervoltage_recovery_delay_s:
-        normal: 4
-        hot_module: 13
-    pmbus:
-      uvlo_on_command: VIN_ON
-      uvlo_off_command: VIN_OFF
-      ov_fault_limit_command: VIN_OV_FAULT_LIMIT
-      status_command: STATUS_INPUT
-
+    physical_behavior: {outside_lockout_range: output_disabled, undervoltage_recovery_delay_s: {normal: 4, hot_module: 13}}
+    pmbus: {uvlo_on_command: VIN_ON, uvlo_off_command: VIN_OFF, ov_fault_limit_command: VIN_OV_FAULT_LIMIT, status_command: STATUS_INPUT}
 persistence:
   nonvolatile_memory: true
   memory_type: EEPROM
@@ -997,44 +707,19 @@ persistence:
   save_command: STORE_DEFAULT_ALL
   restore_command: RESTORE_DEFAULT_ALL
   save_restore_execution_time_ms_max: 500
-  explicitly_documented_persistent_commands:
-    - VOUT_COMMAND
-    - VOUT_MARGIN_HIGH
-    - VOUT_MARGIN_LOW
-    - VIN_ON
-    - VIN_OFF
-    - TON_DELAY
-    - TON_RISE
+  explicitly_documented_persistent_commands: [VOUT_COMMAND, VOUT_MARGIN_HIGH, VOUT_MARGIN_LOW, VIN_ON, VIN_OFF, TON_DELAY, TON_RISE]
   other_writable_command_persistence: not_specified
-
 behavior:
   write_protection:
     standard_command: WRITE_PROTECT
     manufacturer_gate_command: MFR_DEVICE_TYPE
     manufacturer_gate_bit: WPE
     enabled_by_default: true
-    note: "Datasheet states that some writes are ignored until write protection is disabled through MFR_DEVICE_TYPE; only MFR_MOD_DATE_LOC_SN is explicitly labeled with 'lockout per MFR_DEVICE_TYPE' in the detailed command descriptions available in the public datasheet."
-  on_off:
-    hardware_pin_required_on_for_pmbus_enable: true
-    command: OPERATION
-    configuration_command: ON_OFF_CONFIG
-    polarity_variant_dependent: true
-  power_good:
-    pin: PG
-    open_drain: true
-    external_pullup_ohm: 10000
-    external_pullup_v: 3.3
-    assertion_threshold_command: POWER_GOOD_ON
-    deassertion_threshold_command: POWER_GOOD_OFF
-    polarity_command: MFR_PGOOD_POLARITY
-  active_current_sharing:
-    variant_options: ["-A", "-P"]
-    vout_droop_remains_effective: true
-    ishare_voltage_relation: "Iout * 3.3 / (217 * 1.1)"
-  firmware_update:
-    supported: true
-    interface: I2C
-    protocol_details: not_specified_in_datasheet
+    note: Datasheet states that some writes are ignored until write protection is disabled through MFR_DEVICE_TYPE; only MFR_MOD_DATE_LOC_SN is explicitly labeled with 'lockout per MFR_DEVICE_TYPE' in the detailed command descriptions available in the public datasheet.
+  on_off: {hardware_pin_required_on_for_pmbus_enable: true, command: OPERATION, configuration_command: ON_OFF_CONFIG, polarity_variant_dependent: true}
+  power_good: {pin: PG, open_drain: true, external_pullup_ohm: 10000, external_pullup_v: 3.3, assertion_threshold_command: POWER_GOOD_ON, deassertion_threshold_command: POWER_GOOD_OFF, polarity_command: MFR_PGOOD_POLARITY}
+  active_current_sharing: {variant_options: [-A, -P], vout_droop_remains_effective: true, ishare_voltage_relation: Iout * 3.3 / (217 * 1.1)}
+  firmware_update: {supported: true, interface: I2C, protocol_details: not_specified_in_datasheet}
   black_box:
     supported: true
     storage: D_flash
@@ -1045,62 +730,24 @@ behavior:
     fault_time_unit: s
     fault_time_reference: time_elapsed_from_vout_turn_on
     event_record_bytes: 20
-    event_record_layout:
-      0: EVENT_NUMBER
-      1: STATUS_WORD_HIGH_BYTE
-      2: STATUS_WORD_LOW_BYTE
-      3: STATUS_VOUT
-      4: STATUS_IOUT
-      5: STATUS_INPUT
-      6: STATUS_TEMPERATURE
-      7: STATUS_CML
-      8: VIN_DATA_HIGH_BYTE
-      9: VIN_DATA_LOW_BYTE
-      10: VOUT_DATA_HIGH_BYTE
-      11: VOUT_DATA_LOW_BYTE
-      12: IOUT_DATA_HIGH_BYTE
-      13: IOUT_DATA_LOW_BYTE
-      14: TEMPERATURE_DATA_HIGH_BYTE
-      15: TEMPERATURE_DATA_LOW_BYTE
-      16: FAULT_TIME_BYTE_0
-      17: FAULT_TIME_BYTE_1
-      18: FAULT_TIME_BYTE_2
-      19: FAULT_TIME_BYTE_3
+    event_record_layout: {0: EVENT_NUMBER, 1: STATUS_WORD_HIGH_BYTE, 2: STATUS_WORD_LOW_BYTE, 3: STATUS_VOUT, 4: STATUS_IOUT, 5: STATUS_INPUT, 6: STATUS_TEMPERATURE, 7: STATUS_CML, 8: VIN_DATA_HIGH_BYTE, 9: VIN_DATA_LOW_BYTE, 10: VOUT_DATA_HIGH_BYTE, 11: VOUT_DATA_LOW_BYTE, 12: IOUT_DATA_HIGH_BYTE, 13: IOUT_DATA_LOW_BYTE, 14: TEMPERATURE_DATA_HIGH_BYTE, 15: TEMPERATURE_DATA_LOW_BYTE, 16: FAULT_TIME_BYTE_0, 17: FAULT_TIME_BYTE_1, 18: FAULT_TIME_BYTE_2, 19: FAULT_TIME_BYTE_3}
     retrieval_protocol: not_specified_in_datasheet
-
 extensions:
-  documented_calibration_commands_not_in_supported_command_quick_reference:
-    - MFR_VOUT_READ_CAL_OFFSET
-    - MFR_VIN_READ_CAL_OFFSET
-    - MFR_VIN_READ_CAL_GAIN
-    - MFR_IOUT_CAL_OFFSET
-    - MFR_IOUT_CAL_GAIN
-  note: "These calibration commands are mentioned in telemetry descriptions but are not assigned command codes or included in the supported-command quick-reference table in the public datasheet, so they are not promoted into the normative commands map."
-
+  documented_calibration_commands_not_in_supported_command_quick_reference: [MFR_VOUT_READ_CAL_OFFSET, MFR_VIN_READ_CAL_OFFSET, MFR_VIN_READ_CAL_GAIN, MFR_IOUT_CAL_OFFSET, MFR_IOUT_CAL_GAIN]
+  note: These calibration commands are mentioned in telemetry descriptions but are not assigned command codes or included in the supported-command quick-reference table in the public datasheet, so they are not promoted into the normative commands map.
 source_conflicts:
   pmbus_revision:
-    statements:
-      - "Cover/features: Digital interface with PMBus Rev.1.3 compliance."
-      - "Digital feature section: supports a subset of PMBus 1.2 commands."
-      - "PMBUS_REVISION default 0x22 decodes to Part I 1.2 / Part II 1.2."
+    statements: ['Cover/features: Digital interface with PMBus Rev.1.3 compliance.', 'Digital feature section: supports a subset of PMBus 1.2 commands.', PMBUS_REVISION default 0x22 decodes to Part I 1.2 / Part II 1.2.]
     resolution: preserved_without_reconciliation
   ton_delay_minimum:
-    statements:
-      - "Narrative programming range: 10 ms to 500 ms."
-      - "Command detail and quick-reference default allow 0 ms; page 25 lists range 0 ms to 500 ms."
-    resolution: "Represent 0 ms as published special/default value and preserve 10 ms narrative minimum separately."
+    statements: ['Narrative programming range: 10 ms to 500 ms.', Command detail and quick-reference default allow 0 ms; page 25 lists range 0 ms to 500 ms.]
+    resolution: Represent 0 ms as published special/default value and preserve 10 ms narrative minimum separately.
   ton_rise_minimum:
-    statements:
-      - "Narrative programming range: 15 ms to 500 ms."
-      - "Command detail on page 25 lists 12 ms to 500 ms."
+    statements: ['Narrative programming range: 15 ms to 500 ms.', Command detail on page 25 lists 12 ms to 500 ms.]
     resolution: preserved_both
   mfr_fw_rev_transfer:
-    statements:
-      - "Detailed description defines a 2-byte / four-nibble firmware revision value."
-      - "Quick-reference table lists 2 data bytes but transfer type 'Read byte'."
-    resolution: transaction_marked_ambiguous
+    statements: [Detailed description defines a 2-byte / four-nibble firmware revision value., Quick-reference table lists 2 data bytes but transfer type 'Read byte'.]
+    resolution: transaction_marked_unknown
   mfr_mod_date_loc_sn_transfer:
-    statements:
-      - "Detailed description says read support for a 12-byte block."
-      - "Quick-reference table lists 12 data bytes but transfer type 'Read byte'."
+    statements: [Detailed description says read support for a 12-byte block., Quick-reference table lists 12 data bytes but transfer type 'Read byte'.]
     resolution: detailed_description_preferred_for_transaction
