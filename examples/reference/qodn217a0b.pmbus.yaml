@@ -249,9 +249,9 @@ commands:
     data: {kind: scalar, bytes: 2, format_ref: linear11, quantity: droop_slope, unit: mV_per_A, range: {min: 0, max: 5.0}}
     default:
       cases:
-      - when: {option_any: [-A, -P]}
+      - when: {option_any: ['-A', '-P']}
         value: 1.7
-      - when: {option_none: [-A, -P]}
+      - when: {option_none: ['-A', '-P']}
         value: 0
     notes: [Persistence is not explicitly specified in the public datasheet.]
   VIN_ON:
@@ -686,7 +686,7 @@ behavior:
     note: Datasheet states that some writes are ignored until write protection is disabled through MFR_DEVICE_TYPE; only MFR_MOD_DATE_LOC_SN is explicitly labeled with 'lockout per MFR_DEVICE_TYPE' in the detailed command descriptions available in the public datasheet.
   on_off: {hardware_pin_required_on_for_pmbus_enable: true, command: OPERATION, configuration_command: ON_OFF_CONFIG, polarity_variant_dependent: true}
   power_good: {pin: PG, open_drain: true, external_pullup_ohm: 10000, external_pullup_v: 3.3, assertion_threshold_command: POWER_GOOD_ON, deassertion_threshold_command: POWER_GOOD_OFF, polarity_command: MFR_PGOOD_POLARITY}
-  active_current_sharing: {variant_options: [-A, -P], vout_droop_remains_effective: true, ishare_voltage_relation: Iout * 3.3 / (217 * 1.1)}
+  active_current_sharing: {variant_options: ['-A', '-P'], vout_droop_remains_effective: true, ishare_voltage_relation: Iout * 3.3 / (217 * 1.1)}
   firmware_update: {supported: true, interface: I2C, protocol_details: not_specified_in_datasheet}
   black_box:
     supported: true
