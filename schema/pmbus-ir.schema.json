@@ -47,7 +47,13 @@
       "type": "object"
     },
     "data_formats": {
-      "type": "object"
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "$ref": "data-format.schema.json"
+      }
     },
     "commands": {
       "type": "object",
