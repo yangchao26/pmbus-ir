@@ -1,5 +1,7 @@
 # PMBus IR
 
+<br>
+
 <div align="right"><strong>English</strong> | <a href="./README.zh-CN.md">简体中文</a></div>
 
 PMBus IR is an open, vendor-neutral intermediate representation for precisely describing the implemented PMBus interface of a power device.
