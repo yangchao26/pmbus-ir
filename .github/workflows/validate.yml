@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -16,6 +19,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Apply one-time QODN Data IR migration
+        if: github.event_name == 'push' && github.ref == 'refs/heads/command-ir-model-v0.1'
+        run: |
+          python tools/migrate_qodn_reference_v01.py
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add examples/reference/qodn217a0b.pmbus.yaml tests/test_semantic_validator.py
+            git commit -m "Migrate QODN217A0B Data IR semantics"
+            git push origin HEAD:command-ir-model-v0.1
+          fi
 
       - name: Install validator dependencies
         run: python -m pip install -r tools/requirements.txt
