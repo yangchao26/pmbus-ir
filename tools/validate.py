@@ -30,15 +30,29 @@ def _load_json(path: Path) -> Any:
         return json.load(stream)
 
 
-def _inline_command_schema(
+def _inline_schemas(
     root_schema: dict[str, Any],
     command_schema: dict[str, Any],
+    data_format_schema: dict[str, Any],
 ) -> dict[str, Any]:
     schema = copy.deepcopy(root_schema)
+    command = copy.deepcopy(command_schema)
+    data_format = copy.deepcopy(data_format_schema)
+
+    command_data = command.get("properties", {}).get("data", {})
+    format_schema = command_data.get("properties", {}).get("format")
+    if isinstance(format_schema, dict) and format_schema.get("$ref") == "data-format.schema.json":
+        command_data["properties"]["format"] = data_format
+
+    root_formats = schema.get("properties", {}).get("data_formats", {})
+    root_format_values = root_formats.get("additionalProperties")
+    if isinstance(root_format_values, dict) and root_format_values.get("$ref") == "data-format.schema.json":
+        root_formats["additionalProperties"] = data_format
+
     commands = schema.get("properties", {}).get("commands", {})
     additional = commands.get("additionalProperties")
     if isinstance(additional, dict) and additional.get("$ref") == "command.schema.json":
-        commands["additionalProperties"] = command_schema
+        commands["additionalProperties"] = command
     return schema
 
 
@@ -56,10 +70,12 @@ def _structure_issues(
     document: Any,
     root_schema_path: Path,
     command_schema_path: Path,
+    data_format_schema_path: Path,
 ) -> list[ValidationIssue]:
     root_schema = _load_json(root_schema_path)
     command_schema = _load_json(command_schema_path)
-    combined = _inline_command_schema(root_schema, command_schema)
+    data_format_schema = _load_json(data_format_schema_path)
+    combined = _inline_schemas(root_schema, command_schema, data_format_schema)
     validator = Draft202012Validator(combined)
 
     issues: list[ValidationIssue] = []
@@ -105,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = Path(__file__).resolve().parents[1]
     root_schema_path = repo_root / "schema" / "pmbus-ir.schema.json"
     command_schema_path = repo_root / "schema" / "command.schema.json"
+    data_format_schema_path = repo_root / "schema" / "data-format.schema.json"
 
     try:
         document = _load_yaml(document_path)
@@ -126,21 +143,26 @@ def main(argv: list[str] | None = None) -> int:
                 document,
                 root_schema_path,
                 command_schema_path,
+                data_format_schema_path,
             )
         )
 
     issues.extend(validate_semantics(document))
-    issues.sort(key=lambda issue: (issue.path, issue.code, issue.message))
+    issues.sort(key=lambda issue: (issue.severity != "error", issue.path, issue.code, issue.message))
 
     if issues:
         _print_issues(issues)
-        print(f"\nValidation failed with {len(issues)} error(s).")
+
+    errors = [issue for issue in issues if issue.severity == "error"]
+    warnings = [issue for issue in issues if issue.severity != "error"]
+    if errors:
+        print(f"\nValidation failed with {len(errors)} error(s) and {len(warnings)} warning(s).")
         return 1
 
     if args.semantic_only:
-        print("Valid PMBus IR document: semantic validation passed.")
+        print(f"Valid PMBus IR document: semantic validation passed with {len(warnings)} warning(s).")
     else:
-        print("Valid PMBus IR document: schema and semantic validation passed.")
+        print(f"Valid PMBus IR document: schema and semantic validation passed with {len(warnings)} warning(s).")
     return 0
 
 
