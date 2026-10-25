@@ -1,42 +1,12 @@
 # Command IR Model v0.1
 
-## Status
+This document defines the **PMBus IR Command Model v0.1**. It is derived from the first full reference implementation, `examples/reference/qodn217a0b.pmbus.yaml`, rather than from an abstract command table.
 
-This document defines the **PMBus IR Command Model v0.1**.
-
-The model was derived from the first full reference implementation,
-`examples/reference/qodn217a0b.pmbus.yaml`, rather than from an abstract command table.
-
-The v0.1 goal is to freeze the common shape of a command entry while leaving
-device-specific behavior extensible.
-
-The companion machine-readable schema is:
-
-```text
-schema/command.schema.json
-```
+The companion machine-readable schema is `schema/command.schema.json`.
 
 ## Scope
 
-A command entry describes **how one device implements one PMBus command**.
-
-The command model captures:
-
-- command identity and code;
-- standard versus manufacturer-specific origin;
-- implementation completeness;
-- read/write/execute access;
-- SMBus transaction shape;
-- transferred data shape and engineering semantics;
-- defaults;
-- range and cross-command constraints;
-- persistence;
-- timing;
-- conditions, side effects, and device-specific behavior;
-- optional source/provenance notes.
-
-The command model does **not** reproduce the normative definition of a PMBus
-command. Standard command semantics remain defined by the PMBus specification.
+A command entry describes **how one device implements one PMBus command**. The model captures command identity, implementation completeness, access, SMBus transaction shape, payload/data semantics, defaults, constraints, persistence, timing, behavior, and source ambiguity. It does not reproduce normative PMBus command definitions.
 
 ## Command map
 
@@ -50,30 +20,18 @@ commands:
     ...
 ```
 
-### Command identifier
-
-The map key is the canonical command identifier.
-
-Rules:
-
-1. Use the standard PMBus command name when the command is standard.
-2. Use the vendor-published command name for manufacturer-specific commands,
-   normalized to uppercase ASCII with `_` separators.
-3. The identifier must match `^[A-Z][A-Z0-9_]*$`.
-4. A vendor spelling or abbreviation may be preserved with `aliases`.
-5. Do not duplicate the identifier inside the command object.
+Use the standard PMBus command name for standard commands. Use the vendor-published name for manufacturer-specific commands, normalized to uppercase ASCII with `_` separators. Alternate source names may be preserved with `aliases`.
 
 Example:
 
 ```yaml
 READ_TEMPERATURE_1:
   aliases: [READ_TEMP1]
-  ...
 ```
 
 ## Required fields
 
-Every v0.1 command entry has these required fields:
+Every v0.1 command entry requires:
 
 ```yaml
 code:
@@ -84,49 +42,31 @@ transaction:
 data:
 ```
 
-The top-level command shape is:
+Optional common fields are:
 
 ```yaml
-COMMAND_ID:
-  code: 0x00
-  origin: standard
-  support: full
-  roles: []
-  aliases: []
-  access: read_only
-  transaction: {}
-  data: {}
-  default: {}
-  constraints: []
-  limitations: []
-  conditions: []
-  persistence: {}
-  timing: {}
-  behavior: {}
-  source: {}
-  notes: []
+roles:
+aliases:
+default:
+constraints:
+limitations:
+conditions:
+persistence:
+timing:
+behavior:
+source:
+notes:
 ```
-
-Only the six core fields are required. The remaining fields are present when
-they carry device-specific meaning.
 
 ## `code`
 
-`code` is the one-byte command code and is represented as a YAML integer.
-Hexadecimal authoring is recommended because it matches PMBus documentation:
+`code` is the one-byte command code represented as a YAML integer. Hexadecimal authoring is recommended:
 
 ```yaml
 code: 0x8B
 ```
 
-Decimal integer authoring is semantically equivalent and remains valid:
-
-```yaml
-code: 139
-```
-
-Both forms parse to the same integer value and must compare identically in semantic diff.
-Quoted strings such as `"0x8B"` are not valid command-code values in v0.1.
+Decimal integer authoring is semantically equivalent. Quoted strings such as `"0x8B"` are not valid v0.1 command-code values.
 
 ## `origin`
 
@@ -137,7 +77,7 @@ standard
 manufacturer_specific
 ```
 
-Semantic classification belongs in `roles`, not `origin`.
+Semantic classification belongs in `roles`, not in `origin`.
 
 ## `support`
 
@@ -149,14 +89,15 @@ partial
 conditional
 ```
 
-`partial` means only some functions, bits, modes, or response settings are implemented.
-`conditional` requires `conditions`.
+- `full`: the documented implementation is fully supported.
+- `partial`: only some functions, bits, modes, or response settings are implemented.
+- `conditional`: availability depends on an explicit condition and therefore requires `conditions`.
 
-A command absent from `commands` must not automatically be interpreted as unsupported unless the source explicitly provides a complete supported/unsupported matrix.
+Absence from `commands` does not automatically mean unsupported unless the source explicitly provides a complete supported/unsupported matrix.
 
 ## `roles`
 
-v0.1 values:
+v0.1 roles:
 
 ```text
 operation
@@ -172,17 +113,6 @@ manufacturer_control
 ```
 
 A command may have multiple roles.
-
-## `aliases`
-
-`aliases` preserves alternate source names without creating a second command.
-
-Example:
-
-```yaml
-READ_TEMPERATURE_1:
-  aliases: [READ_TEMP1]
-```
 
 ## `access`
 
@@ -218,7 +148,7 @@ write_block
 unknown
 ```
 
-Read and write are represented separately:
+Read and write directions are represented separately:
 
 ```yaml
 transaction:
@@ -226,20 +156,13 @@ transaction:
   write: write_word
 ```
 
-Do not use synthetic combined values such as `read_write_word`.
-Use `unknown` when the source is incomplete or internally inconsistent and preserve the reason in `source`, `notes`, or document-level `source_conflicts`.
+Do not use synthetic values such as `read_write_word`.
 
 ## `data`
 
-`data` describes the transferred payload and always contains:
+`data` always contains `kind` and `bytes`.
 
-```yaml
-data:
-  kind:
-  bytes:
-```
-
-v0.1 `kind` values:
+v0.1 kinds:
 
 ```text
 none
@@ -249,7 +172,7 @@ string
 structured
 ```
 
-### Scalar engineering value
+Scalar example:
 
 ```yaml
 data:
@@ -262,61 +185,9 @@ data:
   resolution: 0.000244140625
 ```
 
-### Bit field
+Bit fields live under `data.bits`, strings use `kind: string`, and vendor-specific packed payloads may use `kind: structured` with `fields`.
 
-Bit definitions live under `data.bits`:
-
-```yaml
-data:
-  kind: bit_field
-  bytes: 1
-  bits:
-    "7":
-      name: ON
-      access: read_write
-      default: 1
-```
-
-Quote bit keys so YAML parsers treat bit positions consistently.
-
-### String
-
-```yaml
-data:
-  kind: string
-  bytes: 5
-  encoding: 8_bit_character
-```
-
-### Structured data
-
-```yaml
-data:
-  kind: structured
-  bytes: 2
-  fields:
-    ...
-```
-
-## Data format reuse
-
-Use either a reusable document-level format:
-
-```yaml
-data:
-  format_ref: vout_linear
-```
-
-or a command-specific inline format:
-
-```yaml
-data:
-  format:
-    type: linear11
-    fixed_exponent: -3
-```
-
-A command must not provide both.
+A command may use either `format_ref` or inline `format`, but not both.
 
 ## `default`
 
@@ -328,24 +199,11 @@ default:
   raw: "0xC000"
 ```
 
-Variant-dependent defaults use `cases`:
-
-```yaml
-default:
-  cases:
-    - when:
-        option_any: ["-A", "-P"]
-      value: 1.7
-    - when:
-        option_none: ["-A", "-P"]
-      value: 0
-```
-
-If the source does not define a default, omit `default`.
+Variant-dependent defaults use `cases`. If a default is not documented, omit the field rather than inventing a sentinel value.
 
 ## `constraints`
 
-Cross-command relationships use machine-readable constraints:
+Cross-command relations are represented structurally:
 
 ```yaml
 constraints:
@@ -356,12 +214,11 @@ constraints:
     unit: V
 ```
 
-v0.1 relation operators are `gt`, `ge`, `lt`, `le`, `eq`, and `ne`.
-Complex automatic clamping may use `dynamic_limit`; restricted enumerations may use `allowed_values`.
+v0.1 supports `relation`, `dynamic_limit`, and `allowed_values` constraint kinds.
 
 ## `limitations`
 
-Use `limitations` to explain why a command is partial.
+Use `limitations` to state why a command is only partially implemented.
 
 ## `conditions`
 
@@ -369,7 +226,7 @@ Conditions affect availability or behavior. Each condition requires `kind` and r
 
 ## `persistence`
 
-Document persistence only when the source supports it.
+Document persistence only where the source supports it:
 
 ```yaml
 persistence:
@@ -382,130 +239,47 @@ If persistence is not documented, omit it rather than inferring volatility.
 
 ## `timing`
 
-Command-specific timing stays under `timing`, for example:
-
-```yaml
-timing:
-  execution_time_ms:
-    max: 500
-  block_further_commands_until_complete: true
-```
+Command-specific timing belongs under `timing`.
 
 ## `behavior`
 
-`behavior` captures product-specific semantics that do not yet justify a common field, such as side effects, retry behavior, hardware-pin dependencies, sensor interpretation, or calibration behavior.
+`behavior` captures source-backed product-specific semantics that do not yet justify a common field, such as side effects, retry behavior, hardware-pin dependencies, sensor interpretation, and calibration behavior.
 
 ## `source`
 
-`source` preserves command-specific ambiguity or conflicts. Document-wide conflicts belong under `source_conflicts`.
-
-## `notes`
-
-`notes` is for concise human-readable information that does not yet justify a structured field. It must not replace an existing structured field.
-
-## Canonical examples
-
-### Scalar configuration command
-
-```yaml
-VOUT_COMMAND:
-  code: 0x21
-  origin: standard
-  support: full
-  roles: [configuration]
-  access: read_write
-  transaction:
-    read: read_word
-    write: write_word
-  data:
-    kind: scalar
-    bytes: 2
-    format_ref: vout_linear
-    quantity: voltage
-    unit: V
-    range: {min: 9.5, max: 12.5}
-    resolution: 0.000244140625
-  default:
-    value: 12.0
-    raw: "0xC000"
-  persistence:
-    mode: nonvolatile_via_command
-    commit_command: STORE_DEFAULT_ALL
-    restore_command: RESTORE_DEFAULT_ALL
-```
-
-### Telemetry command
-
-```yaml
-READ_VIN:
-  code: 0x88
-  origin: standard
-  support: full
-  roles: [telemetry]
-  access: read_only
-  transaction:
-    read: read_word
-  data:
-    kind: scalar
-    bytes: 2
-    format:
-      type: linear11
-      fixed_exponent: -3
-    quantity: voltage
-    unit: V
-    range: {min: 0, max: 127.875}
-    resolution: 0.125
-```
-
-### Manufacturer-specific structured command
-
-```yaml
-MFR_DEVICE_TYPE:
-  code: 0xD0
-  origin: manufacturer_specific
-  support: partial
-  roles: [manufacturer_control, identification]
-  access: read_write
-  transaction:
-    read: read_word
-    write: write_word
-  data:
-    kind: structured
-    bytes: 2
-    fields:
-      ...
-```
+`source` preserves command-specific ambiguity or conflicts. Document-wide conflicts belong under document-level `source_conflicts`.
 
 ## Validation rules in v0.1
 
 The companion JSON Schema enforces:
 
-1. `code`, `origin`, `support`, `access`, `transaction`, and `data` are required.
-2. `code` is an integer from 0 through 255.
-3. core enumerations are closed in v0.1.
-4. access and transaction direction must agree.
-5. `conditional` support requires `conditions`.
-6. `nonvolatile_via_command` persistence requires `commit_command`.
-7. `data` may use either `format_ref` or inline `format`, but not both.
-8. unknown top-level command fields are rejected.
+1. required core fields;
+2. integer command codes from 0 through 255;
+3. closed v0.1 enumerations for origin/support/access/roles/transaction/data kind;
+4. consistency between access and transaction direction;
+5. conditions for `conditional` support;
+6. a commit command for `nonvolatile_via_command` persistence;
+7. mutual exclusion of `format_ref` and inline `format`;
+8. rejection of unknown top-level command fields.
 
-Semantic validation beyond JSON Schema will later check duplicate codes, command references, format references, ranges, cross-command inequalities, and registry consistency.
+Semantic validation beyond JSON Schema will later check duplicate codes, command references, format references, ranges, cross-command inequalities, and future registry consistency.
 
 ## QODN217A0B migration result
 
-The QODN217A0B reference implementation has been migrated to this v0.1 command shape.
+The QODN217A0B reference implementation is now migrated to this v0.1 command shape.
 
 The migration normalizes:
 
 - all 48 commands in the datasheet quick-reference inventory;
+- command codes as YAML integers authored in hexadecimal;
 - support state to `full`, `partial`, or `conditional`;
-- command access and SMBus read/write transaction direction;
-- payload and engineering-value semantics under `data`;
+- access and SMBus transaction direction;
+- payload and engineering semantics under `data`;
 - defaults under one `default` object;
 - cross-command constraints into structured relations where possible;
 - persistence only where explicitly documented;
 - status reset behavior under `behavior`;
-- `READ_TEMPERATURE_1` as the canonical identifier with `READ_TEMP1` retained as an alias;
-- documented source conflicts without silently reconciling them.
+- `READ_TEMPERATURE_1` as canonical identifier with `READ_TEMP1` retained as an alias;
+- source conflicts without silently reconciling them.
 
 All 48 migrated command entries validate against `schema/command.schema.json`.
