@@ -1,6 +1,6 @@
 # Tools
 
-The first executable tooling is now available for PMBus IR validation.
+Executable tooling is available for PMBus IR structural and semantic validation.
 
 ## Validate
 
@@ -10,7 +10,7 @@ Install dependencies:
 python -m pip install -r tools/requirements.txt
 ```
 
-Run structural JSON Schema validation and Semantic Validation v0.1 together:
+Run JSON Schema validation and Semantic Validation v0.1 together:
 
 ```bash
 python tools/validate.py validate examples/reference/qodn217a0b.pmbus.yaml
@@ -22,19 +22,21 @@ Run only semantic validation:
 python tools/validate.py validate --semantic-only examples/reference/qodn217a0b.pmbus.yaml
 ```
 
-The validator currently checks document-internal consistency including:
+The validator checks document-internal consistency, including:
 
-- duplicate command codes and alias collisions;
-- broken command and data-format references;
-- scalar ranges, defaults, and cross-command relations;
-- `format_ref` versus command payload width;
-- LINEAR11 and VOUT Linear representation constraints;
-- fixed-exponent range and encoding-resolution consistency;
-- programming step quantization;
-- bit-field width and bit positions;
-- string/block transaction and byte-length consistency.
+- command-code and alias uniqueness;
+- command and data-format references;
+- scalar ranges and defaults;
+- LINEAR11 and VOUT Linear format semantics;
+- encoding-resolution consistency;
+- bit-field widths;
+- canonical SMBus block content/count/payload lengths;
+- string encoding and content length;
+- cross-command relationships.
 
-Warnings are reported separately from errors and do not cause validation failure. This is used, for example, when an older ambiguous `resolution` field differs from the mathematically implied encoding LSB and should be migrated to either `encoding_resolution` or `published_resolution`.
+Canonical Data IR uses `encoding_resolution` and `published_resolution` explicitly. Legacy experimental `resolution` / `resolution_v` fields are accepted for compatibility but produce warnings.
+
+For block commands, `data.bytes` means semantic content bytes. The block count prefix is represented separately under `data.block`.
 
 See:
 
