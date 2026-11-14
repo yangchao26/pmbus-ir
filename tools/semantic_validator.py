@@ -156,6 +156,42 @@ def _validate_data_format_descriptor(
     format_type = _format_type(descriptor)
     wire_bytes = _wire_bytes(descriptor)
 
+    declared_type = descriptor.get("type")
+    if declared_type in {"unsigned16_fixed", "signed16_fixed", "packed_bcd"}:
+        if wire_bytes is not None and wire_bytes != 2:
+            issues.append(
+                ValidationIssue(
+                    "format_wire_width_mismatch",
+                    path + ".wire_bytes",
+                    f"{declared_type} requires 2 bytes, not {wire_bytes}.",
+                )
+            )
+        if declared_type == "unsigned16_fixed":
+            scale = descriptor.get("scale")
+            if not isinstance(scale, (int, float)) or isinstance(scale, bool) or scale <= 0:
+                issues.append(
+                    ValidationIssue("missing_fixed_scale", path + ".scale",
+                                    "unsigned16_fixed requires a positive scale.")
+                )
+            elif isinstance(descriptor.get("encoding_resolution"), (int, float)):
+                if not isclose(float(scale), float(descriptor["encoding_resolution"]), rel_tol=1e-9, abs_tol=1e-12):
+                    issues.append(
+                        ValidationIssue("encoding_resolution_mismatch", path + ".encoding_resolution",
+                                        "Fixed unsigned encoding resolution must equal the declared scale.")
+                    )
+        if declared_type == "signed16_fixed" and _fixed_exponent(descriptor) is None:
+            issues.append(
+                ValidationIssue("missing_fixed_exponent", path + ".fixed_exponent",
+                                "signed16_fixed requires a fixed exponent in v0.1.")
+            )
+        if declared_type == "packed_bcd":
+            digits = descriptor.get("digits")
+            if not isinstance(digits, int) or isinstance(digits, bool) or not (1 <= digits <= 4):
+                issues.append(
+                    ValidationIssue("invalid_packed_bcd_digits", path + ".digits",
+                                    "A two-byte packed BCD descriptor must declare 1..4 digits.")
+                )
+
     if format_type in {"linear11", "vout_linear"} and wire_bytes is not None and wire_bytes != 2:
         issues.append(
             ValidationIssue(
@@ -448,6 +484,20 @@ def validate_semantics(document: Mapping[str, Any]) -> list[ValidationIssue]:
     if not isinstance(commands_raw, Mapping):
         return issues
     commands: Mapping[str, Any] = commands_raw
+
+    declared_count = document.get("document", {})
+    if isinstance(declared_count, Mapping):
+        completeness = declared_count.get("completeness", {})
+        if isinstance(completeness, Mapping):
+            count = completeness.get("supported_command_count")
+            if isinstance(count, int) and not isinstance(count, bool) and count != len(commands):
+                issues.append(
+                    ValidationIssue(
+                        "command_inventory_count_mismatch",
+                        _path("document", "completeness", "supported_command_count"),
+                        f"Declared {count} commands, but commands map contains {len(commands)}.",
+                    )
+                )
 
     data_formats_raw = document.get("data_formats", {})
     data_formats: Mapping[str, Any]
