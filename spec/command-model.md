@@ -263,7 +263,7 @@ The companion JSON Schema enforces:
 7. mutual exclusion of `format_ref` and inline `format`;
 8. rejection of unknown top-level command fields.
 
-Semantic validation checks duplicate codes, command references, declared inventory counts, format references, numeric encodings, ranges, defaults, block content/framing lengths, and cross-command relations. The validator does not prove PMBus normative compliance.
+Semantic Validation v0.1 checks duplicate command codes, command and format references, ranges/defaults, cross-command relations, numeric encoding consistency, and block content/framing lengths. It also checks declared inventory counts. Future versions may extend these checks. The validator does not prove PMBus normative compliance.
 
 ## QODN217A0B migration result
 
