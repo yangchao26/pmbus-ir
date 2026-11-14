@@ -2,11 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/yangchao26/pmbus-ir/main/schema/data-format.schema.json",
   "title": "PMBus IR Data Format v0.1",
-  "description": "Schema for reusable or inline PMBus IR numeric data-format descriptors. Semantic validation provides the stronger representation checks.",
+  "description": "Data IR v0.1 encoding descriptors for reusable/inline numeric representations. Device evidence may include LINEAR11, VOUT Linear, 16-bit calibration factors, signed offsets, and packed BCD identifiers.",
   "type": "object",
   "properties": {
     "type": {
-      "enum": ["linear11", "vout_linear"]
+      "enum": [
+        "linear11",
+        "vout_linear",
+        "unsigned16_fixed",
+        "signed16_fixed",
+        "packed_bcd"
+      ]
     },
     "wire_bytes": {
       "type": "integer",
@@ -22,7 +28,11 @@
       "pattern": "^[A-Z][A-Z0-9_]*$"
     },
     "exponent_policy": {
-      "enum": ["per_word", "fixed_per_command", "external_command"]
+      "enum": [
+        "per_word",
+        "fixed_per_command",
+        "external_command"
+      ]
     },
     "mantissa": {},
     "exponent": {},
@@ -46,17 +56,48 @@
     },
     "transport": {
       "type": "string"
+    },
+    "scale": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Engineering units per raw integer for an explicit fixed-scale encoding."
+    },
+    "digits": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Count of 4-bit BCD digits stored in a 2-byte packed BCD descriptor."
+    },
+    "signed": {
+      "type": "boolean",
+      "description": "Optional explicit signedness; format type controls canonical interpretation."
     }
   },
   "additionalProperties": true,
   "allOf": [
     {
       "if": {
-        "properties": {"type": {"enum": ["linear11", "vout_linear"]}},
-        "required": ["type"]
+        "properties": {
+          "type": {
+            "enum": [
+              "linear11",
+              "vout_linear",
+              "unsigned16_fixed",
+              "signed16_fixed",
+              "packed_bcd"
+            ]
+          }
+        },
+        "required": [
+          "type"
+        ]
       },
       "then": {
-        "properties": {"wire_bytes": {"const": 2}}
+        "properties": {
+          "wire_bytes": {
+            "const": 2
+          }
+        }
       }
     }
   ]
