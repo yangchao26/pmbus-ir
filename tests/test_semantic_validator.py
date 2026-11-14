@@ -250,5 +250,33 @@ class SemanticValidationTests(unittest.TestCase):
         self.assertEqual(warnings, [], issues)
 
 
+    def test_ebdw_reference_has_no_semantic_issues(self) -> None:
+        reference_path = REPO_ROOT / "examples" / "reference" / "ebdw025a0b.pmbus.yaml"
+        with reference_path.open("r", encoding="utf-8") as stream:
+            document = yaml.safe_load(stream)
+        self.assertEqual(len(document["commands"]), 50)
+        self.assertEqual(validate_semantics(document), [])
+
+    def test_declared_command_count_must_match_inventory(self) -> None:
+        document = _minimal_document()
+        document["document"] = {"completeness": {"supported_command_count": 2}}
+        self.assert_issue(document, "command_inventory_count_mismatch")
+
+    def test_fixed_unsigned_calibration_scale_mismatch(self) -> None:
+        document = _minimal_document()
+        document["data_formats"]["gain"] = {
+            "type": "unsigned16_fixed", "wire_bytes": 2,
+            "scale": 1.0 / 8192, "encoding_resolution": 0.5,
+        }
+        self.assert_issue(document, "encoding_resolution_mismatch")
+
+    def test_packed_bcd_digit_count_invalid(self) -> None:
+        document = _minimal_document()
+        document["data_formats"]["fw"] = {
+            "type": "packed_bcd", "wire_bytes": 2, "digits": 5,
+        }
+        self.assert_issue(document, "invalid_packed_bcd_digits")
+
+
 if __name__ == "__main__":
     unittest.main()

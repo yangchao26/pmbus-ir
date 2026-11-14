@@ -2,7 +2,7 @@
 
 This document defines the **PMBus IR Command Model v0.1**. It is derived from the first full reference implementation, `examples/reference/qodn217a0b.pmbus.yaml`, rather than from an abstract command table.
 
-The companion machine-readable schema is `schema/command.schema.json`.
+The companion machine-readable schema is `schema/command.schema.json`. The v0.1 model has been exercised against both QODN217A0B (48 published commands) and EBDW025A0B (50 published commands).
 
 ## Scope
 
@@ -263,7 +263,7 @@ The companion JSON Schema enforces:
 7. mutual exclusion of `format_ref` and inline `format`;
 8. rejection of unknown top-level command fields.
 
-Semantic Validation v0.1 checks duplicate command codes, command and format references, ranges/defaults, cross-command relations, numeric encoding consistency, and block content/framing lengths. Future versions may extend these checks.
+Semantic Validation v0.1 checks duplicate command codes, command and format references, ranges/defaults, cross-command relations, numeric encoding consistency, and block content/framing lengths. It also checks declared inventory counts. Future versions may extend these checks. The validator does not prove PMBus normative compliance.
 
 ## QODN217A0B migration result
 
@@ -284,3 +284,27 @@ The migration normalizes:
 - source conflicts without silently reconciling them.
 
 All 48 migrated command entries validate against `schema/command.schema.json`.
+
+## Additional device-backed v0.1 cases: EBDW025A0B
+
+The EBDW025A0B reference contributes interface cases absent or materially different in QODN217A0B:
+
+- 50 published commands, including `VOUT_CAL_OFFSET`, additional manufacturer calibration words, and configurable T/C1/C2 pin behavior.
+- A `conditional` `VOUT_COMMAND` function that is unavailable when the analog TRIM function is selected.
+- Two resistor-programmed octal address digits rather than a one-pin address selection.
+- Calibration scale factors using unsigned 16-bit values, signed offset representations, and firmware BCD fields. Encoding semantics are in `spec/data-model.md`.
+- `IOUT_OC_FAULT_LIMIT` and `IOUT_OC_WARN_LIMIT` represented as `read_only` per their detailed command descriptions and quick reference, with the contradictory feature narrative preserved in `source_conflicts`.
+- `MFR_FW_REV` represented with `transaction.read: unknown`, because the detailed two-byte BCD payload contradicts the table's Read byte transfer type.
+- `MFR_MOD_DATE_LOC_SN` uses a source-reported 12-byte content block with an explicitly modeled one-byte count prefix.
+
+The presence of a command in the published command list does not automatically establish full support. Use `partial` for supported subsets, `conditional` with declared conditions for mode-dependent availability, and `unknown` when source material does not establish a safe on-wire read/write shape.
+
+## Source fidelity and the boundary of "complete"
+
+A device reference is complete **relative to its explicitly declared source command inventory**; the source may still omit commands, constraints, or firmware details. For every command, track the source quick-reference page and detailed pages where available. Do not assign undocumented command codes or silently reconcile read/write, bit-width, revision, or scale contradictions.
+
+`data.bytes` means semantic content bytes. For block transactions, `data.block` declares content length and count prefix separately. Both command-level and reusable format-level `encoding_resolution` describe the encoding LSB; `published_resolution` describes device/measurement resolution.
+
+## Remaining work
+
+Fully declarative bit-range layouts, variant-dependent source reconciliation, page/phase command scopes, and runtime transition validation are not frozen in v0.1. These require additional reference devices or engineering evidence.

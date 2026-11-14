@@ -4,8 +4,8 @@
 
 This document defines the first concrete **PMBus IR Data Model v0.1**.
 
-The model is driven by the QODN217A0B reference implementation and focuses on
-the data representations needed by the first real PMBus IR document. It does
+The model is driven by the QODN217A0B and EBDW025A0B reference implementations and focuses on
+the representations observed in these two real PMBus IR documents. It does
 not attempt to reproduce the normative PMBus specification.
 
 The companion machine-readable format schema is:
@@ -381,3 +381,68 @@ It does not attempt to reproduce the PMBus command-definition database or to
 infer undocumented vendor framing conventions. When a source's length
 convention is ambiguous, the IR records the interpretation and preserves the
 conflict explicitly.
+
+## EBDW025A0B: additional numeric encodings in v0.1
+
+The second reference requires distinguishing three further 16-bit representations. These are **different from** VOUT Linear and LINEAR11; do not force them into the latter format types solely because they occupy two bytes.
+
+### `unsigned16_fixed`: fixed-scale calibration factors
+
+```yaml
+data_formats:
+  calibration_gain_unsigned16:
+    type: unsigned16_fixed
+    wire_bytes: 2
+    scale: 0.0001220703125
+    encoding_resolution: 0.0001220703125
+```
+
+For a non-negative, unsigned 16-bit integer `raw`, the engineering/scaling factor is:
+
+```text
+value = raw * scale
+raw in 0 .. 65535
+```
+
+EBDW025A0B gain calibration uses the source-backed factor `1/8192`. This makes the published example/default `raw = 0x2000` equal to a unity gain of `1.0`. The validator checks that the descriptor's `encoding_resolution` equals its declared positive `scale`. It does not infer a gain command's purpose, register access, or calibration write safety.
+
+### `signed16_fixed`: signed fixed-exponent offsets
+
+```yaml
+data_formats:
+  calibration_offset_signed16:
+    type: signed16_fixed
+    wire_bytes: 2
+    fixed_exponent: -12
+    encoding_resolution: 0.000244140625
+```
+
+A signed 16-bit two's-complement value has mathematical resolution `2 ^ fixed_exponent`. In EBDW025A0B, the detailed description of the manufacturing VOUT read calibration offset explicitly calls for a signed 16-bit mantissa and exponent -12. This format must **not** be conflated with VOUT Linear's unsigned 16-bit mantissa.
+
+The separate `VOUT_CAL_OFFSET` command is deliberately **not assigned an inferred numeric format** in the EBDW025A0B reference: its published range includes negative values, while the quick-reference format label says VOUT Linear. The ambiguity is retained as source evidence.
+
+### `packed_bcd`: firmware revision digits
+
+```yaml
+data_formats:
+  packed_bcd_4digits:
+    type: packed_bcd
+    wire_bytes: 2
+    digits: 4
+```
+
+The EBDW025A0B `MFR_FW_REV` uses four decimal BCD digits across two bytes, which the datasheet illustrates as `0x1219` → revision `1.2.19`. Four packed BCD digits are not the same as four ASCII characters. The source simultaneously calls the quick-reference transfer `Read byte`, so the actual read transaction remains unknown pending confirmation.
+
+The v0.1 descriptor validator ensures that a two-byte packed BCD descriptor declares 1–4 digits. A runtime validator may later check each read nibble is within decimal digit range `0..9`; this is not verified without a captured device response.
+
+## Known second-reference resolution differences
+
+EBDW025A0B `READ_IOUT` uses LINEAR11 with exponent `-4` (`encoding_resolution = 0.0625 A`) but publishes an output-current measurement resolution of `0.19 A`. The distinction is identical in principle to the QODN217A0B `READ_IOUT` (`0.125 A` encoding versus `0.146 A` published).
+
+Do not set `published_resolution` equal to `encoding_resolution` just because the latter is mathematically computable. Likewise, a `step` for permitted programming values is separate from both.
+
+## Scope of automatic v0.1 encoding checks
+
+The validator currently supports: LINEAR11 and VOUT Linear width/exponent checks; unsigned 16-bit calibration scale/encoding resolution consistency; signed 16-bit fixed-exponent declaration; packed BCD declared width/digit capacity; local data/format width; scalar range/default checks; and block content versus count-prefix consistency.
+
+It does not yet perform actual bus frame decoding, automatically infer byte order from normative PMBus text, evaluate on-device defaults, or reconcile contradictory datasheet format claims. These boundaries preserve the distinction between **validated IR consistency** and **verified device behavior**.

@@ -311,3 +311,25 @@ Likely follow-on work includes:
 - dependency-cycle detection;
 - semantic diff based on normalized command and data models;
 - machine-readable JSON validation output.
+
+## Second Reference IR: supported encoding and inventory checks
+
+The EBDW025A0B reference adds three v0.1 numeric encodings and a declared-inventory invariant:
+
+- `command_inventory_count_mismatch`: if `document.completeness.supported_command_count` is specified, it must equal the number of canonical entries under `commands`.
+- `missing_fixed_scale`: `unsigned16_fixed` requires a positive `scale`.
+- `encoding_resolution_mismatch`: `unsigned16_fixed.encoding_resolution` must equal its declared `scale`; `signed16_fixed` exponent-based resolution must match `2^fixed_exponent`.
+- `missing_fixed_exponent`: `signed16_fixed` requires a fixed exponent in v0.1.
+- `invalid_packed_bcd_digits`: a two-byte `packed_bcd` descriptor requires 1–4 digits.
+- `format_wire_width_mismatch`: `unsigned16_fixed`, `signed16_fixed` and `packed_bcd` have two-byte representations.
+
+These checks validate the structure/meaning of the IR representation, not live device data or undocumented register behavior. In particular, the EBDW025A0B `VOUT_CAL_OFFSET` signedness discrepancy is preserved under `source_conflicts` rather than filled in by the validator.
+
+The canonical installed command is:
+
+```bash
+python -m pip install -e .
+pmbus-ir validate examples/reference/ebdw025a0b.pmbus.yaml
+```
+
+Both EBDW025A0B (50 commands) and QODN217A0B (48 commands) are regression inputs. A successful validation means the references are internally consistent relative to published material; it does **not** verify complete PMBus compliance or physical device responses.

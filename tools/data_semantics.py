@@ -3,7 +3,10 @@ from __future__ import annotations
 from math import isclose
 from typing import Any, Mapping
 
-from semantic_validator import ValidationIssue
+if __package__:
+    from .semantic_validator import ValidationIssue
+else:
+    from semantic_validator import ValidationIssue
 
 
 def _path(*parts: object) -> str:
