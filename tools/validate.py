@@ -17,8 +17,12 @@ try:
 except ImportError as exc:
     raise SystemExit("jsonschema is required. Install tools/requirements.txt.") from exc
 
-from data_semantics import validate_data_model_semantics
-from semantic_validator import ValidationIssue, validate_semantics
+if __package__:
+    from .data_semantics import validate_data_model_semantics
+    from .semantic_validator import ValidationIssue, validate_semantics
+else:
+    from data_semantics import validate_data_model_semantics
+    from semantic_validator import ValidationIssue, validate_semantics
 
 
 def _load_yaml(path: Path) -> Any:
