@@ -101,8 +101,17 @@
       "type": "object",
       "properties": {
         "pmbus": {
-          "type": "string",
-          "minLength": 1
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "object",
+              "minProperties": 1,
+              "description": "Source-backed multiple claims or revision-command disclosures."
+            }
+          ]
         }
       },
       "additionalProperties": true
