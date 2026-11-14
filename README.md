@@ -148,6 +148,12 @@ pmbus-ir/
     └── README.md
 ```
 
+## Application documentation
+
+- [AN008 — PMBus application guide (Chinese; draft, pending technical review)](docs/application-notes/AN008/README.md)
+
+The imported AN008 materials are supplementary application notes, not normative PMBus IR definitions or independently verified device behavior. See the included review reports before relying on command details.
+
 ## v0.1 scope
 
 The first milestone is intentionally narrow:
