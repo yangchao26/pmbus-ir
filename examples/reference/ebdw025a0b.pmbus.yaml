@@ -250,6 +250,14 @@ commands:
     data:
       kind: "structured"
       bytes: 1
+      fields:
+        mode:
+          bits: "7:5"
+          value: "linear"
+        exponent:
+          bits: "4:0"
+          fixed: -12
+          signed: true
     default:
       raw: "0x14"
     source:
@@ -536,6 +544,27 @@ commands:
     data:
       kind: "bit_field"
       bytes: 1
+      bits:
+        "0":
+          name: "DELAY_0"
+        "1":
+          name: "DELAY_1"
+        "2":
+          name: "DELAY_2"
+        "3":
+          name: "RETRY_0"
+        "4":
+          name: "RETRY_1"
+        "5":
+          name: "RETRY_2"
+        "6":
+          name: "RSP_0"
+        "7":
+          name: "RSP_1"
+    constraints:
+      - kind: "allowed_values"
+        description: "RSP 10; retry 000 or 111; DT=000. See datasheet page 26."
+        values: ["RSP=10;RS=000;DT=000","RSP=10;RS=111;DT=000"]
     default:
       raw: "0xB8"
     source:
@@ -587,6 +616,27 @@ commands:
     data:
       kind: "bit_field"
       bytes: 1
+      bits:
+        "0":
+          name: "DELAY_0"
+        "1":
+          name: "DELAY_1"
+        "2":
+          name: "DELAY_2"
+        "3":
+          name: "RETRY_0"
+        "4":
+          name: "RETRY_1"
+        "5":
+          name: "RETRY_2"
+        "6":
+          name: "RSP_0"
+        "7":
+          name: "RSP_1"
+    constraints:
+      - kind: "allowed_values"
+        description: "RSP 11; retry 000 or 111; DT=000. See datasheet page 26."
+        values: ["RSP=11;RS=000;DT=000","RSP=11;RS=111;DT=000"]
     default:
       raw: "0xF8"
     source:
@@ -671,6 +721,27 @@ commands:
     data:
       kind: "bit_field"
       bytes: 1
+      bits:
+        "0":
+          name: "DELAY_0"
+        "1":
+          name: "DELAY_1"
+        "2":
+          name: "DELAY_2"
+        "3":
+          name: "RETRY_0"
+        "4":
+          name: "RETRY_1"
+        "5":
+          name: "RETRY_2"
+        "6":
+          name: "RSP_0"
+        "7":
+          name: "RSP_1"
+    constraints:
+      - kind: "allowed_values"
+        description: "RSP 10; retry 000 or 111; DT=000. See datasheet page 27."
+        values: ["RSP=10;RS=000;DT=000","RSP=10;RS=111;DT=000"]
     default:
       raw: "0xB8"
     source:
@@ -751,6 +822,27 @@ commands:
     data:
       kind: "bit_field"
       bytes: 1
+      bits:
+        "0":
+          name: "DELAY_0"
+        "1":
+          name: "DELAY_1"
+        "2":
+          name: "DELAY_2"
+        "3":
+          name: "RETRY_0"
+        "4":
+          name: "RETRY_1"
+        "5":
+          name: "RETRY_2"
+        "6":
+          name: "RSP_0"
+        "7":
+          name: "RSP_1"
+    constraints:
+      - kind: "allowed_values"
+        description: "RSP 11; retry 000; DT=000. See datasheet page 28."
+        values: ["RSP=11;RS=000;DT=000"]
     default:
       raw: "0xC0"
     source:
@@ -1089,6 +1181,20 @@ commands:
       unit: "A"
       quantity: "current"
       published_resolution: 0.19
+      accuracy:
+        non_smt_option:
+          current_5_to_25_a:
+            percent:
+              min: -5
+              max: 4
+        smt_option:
+          percent:
+            min: -20
+            max: 20
+        current_below_5_a:
+          absolute_a:
+            min: -1.4
+            max: 2.7
     source:
       quick_reference_page: 34
       detail_page: 30
@@ -1155,6 +1261,19 @@ commands:
     data:
       kind: "structured"
       bytes: 2
+      fields:
+        high_byte:
+          name: "RESERVED"
+          bits: "7:0"
+        module_name:
+          byte: "low"
+          bits: "7:2"
+        write_protect_enable:
+          byte: "low"
+          bit: 1
+          name: "WPE"
+        low_byte_bit0:
+          name: "RESERVED"
     default:
       raw: "0x008A"
     behavior:
@@ -1200,6 +1319,8 @@ commands:
     roles:
       - "manufacturer_control"
       - "configuration"
+    aliases:
+      - "MFR_VOUT_READ_CAL_OFFSET"
     access: "read_write"
     transaction:
       read: "read_word"
@@ -1255,6 +1376,8 @@ commands:
     roles:
       - "manufacturer_control"
       - "configuration"
+    aliases:
+      - "MFR_VIN_READ_CAL_OFFSET"
     access: "read_write"
     transaction:
       read: "read_word"
@@ -1442,6 +1565,8 @@ commands:
     roles:
       - "manufacturer_control"
       - "identification"
+    aliases:
+      - "MFR_MODULE_DATE_LOC_SN"
     access: "read_write"
     transaction:
       read: "read_block"
