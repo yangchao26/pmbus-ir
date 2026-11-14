@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/yangchao26/pmbus-ir/main/schema/command.schema.json",
+  "title": "PMBus IR Command Model v0.1",
+  "description": "Schema for one command entry in a PMBus IR document. PMBus IR documents themselves are authored in YAML.",
+  "type": "object",
+  "required": ["code", "origin", "support", "access", "transaction", "data"],
+  "properties": {
+    "code": {"type": "integer", "minimum": 0, "maximum": 255},
+    "origin": {"enum": ["standard", "manufacturer_specific"]},
+    "support": {"enum": ["full", "partial", "conditional"]},
+    "roles": {"type": "array", "items": {"enum": ["operation", "configuration", "capability", "persistence", "protection_limit", "protection_response", "status", "telemetry", "identification", "manufacturer_control"]}, "uniqueItems": true},
+    "aliases": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}, "uniqueItems": true},
+    "access": {"enum": ["read_only", "write_only", "read_write", "execute"]},
+    "transaction": {"type": "object", "properties": {"read": {"enum": ["read_byte", "read_word", "read_block", "unknown"]}, "write": {"enum": ["send_byte", "write_byte", "write_word", "write_block", "unknown"]}}, "additionalProperties": false, "minProperties": 1},
+    "data": {
+      "type": "object",
+      "required": ["kind", "bytes"],
+      "properties": {
+        "kind": {"enum": ["none", "scalar", "bit_field", "string", "structured"]},
+        "bytes": {"type": "integer", "minimum": 0, "description": "Semantic content bytes. Protocol framing, block count, and PEC are excluded."},
+        "block": {"$ref": "#/$defs/block_transfer"},
+        "format_ref": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "format": {"$ref": "data-format.schema.json"},
+        "quantity": {"type": "string"},
+        "unit": {"type": "string"},
+        "range": {"$ref": "#/$defs/range"},
+        "encoding_resolution": {"type": "number", "exclusiveMinimum": 0},
+        "published_resolution": {"type": "number", "exclusiveMinimum": 0},
+        "resolution": {"type": "number", "exclusiveMinimum": 0, "description": "Legacy experimental field. New documents should use encoding_resolution and/or published_resolution."},
+        "step": {"type": "number", "exclusiveMinimum": 0},
+        "accuracy": {"type": "object"},
+        "bits": {"type": "object", "propertyNames": {"pattern": "^(0|[1-9][0-9]*)$"}, "additionalProperties": {"$ref": "#/$defs/bit_field"}},
+        "fields": {"type": "object"},
+        "encoding": {"type": "string"}
+      },
+      "additionalProperties": true,
+      "allOf": [{"not": {"required": ["format_ref", "format"]}}]
+    },
+    "default": {"$ref": "#/$defs/default"},
+    "constraints": {"type": "array", "items": {"$ref": "#/$defs/constraint"}},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "conditions": {"type": "array", "items": {"type": "object", "required": ["kind"], "additionalProperties": true}},
+    "persistence": {"type": "object", "required": ["mode"], "properties": {"mode": {"enum": ["volatile", "nonvolatile_via_command"]}, "commit_command": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}, "restore_command": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}}, "additionalProperties": false},
+    "timing": {"type": "object"},
+    "behavior": {"type": "object"},
+    "source": {"type": "object"},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {"if": {"properties": {"access": {"const": "read_only"}}, "required": ["access"]}, "then": {"properties": {"transaction": {"required": ["read"], "not": {"required": ["write"]}}}}},
+    {"if": {"properties": {"access": {"const": "write_only"}}, "required": ["access"]}, "then": {"properties": {"transaction": {"required": ["write"], "not": {"required": ["read"]}}}}},
+    {"if": {"properties": {"access": {"const": "read_write"}}, "required": ["access"]}, "then": {"properties": {"transaction": {"required": ["read", "write"]}}}},
+    {"if": {"properties": {"access": {"const": "execute"}}, "required": ["access"]}, "then": {"properties": {"transaction": {"required": ["write"], "not": {"required": ["read"]}}}}},
+    {"if": {"properties": {"support": {"const": "conditional"}}, "required": ["support"]}, "then": {"required": ["conditions"]}},
+    {"if": {"properties": {"persistence": {"properties": {"mode": {"const": "nonvolatile_via_command"}}, "required": ["mode"]}}, "required": ["persistence"]}, "then": {"properties": {"persistence": {"required": ["commit_command"]}}}}
+  ],
+  "$defs": {
+    "range": {"type": "object", "required": ["min", "max"], "properties": {"min": {"type": "number"}, "max": {"type": "number"}}, "additionalProperties": false},
+    "default": {"type": "object", "properties": {"value": {}, "raw": {"type": "string", "pattern": "^0x[0-9A-Fa-f]+$"}, "cases": {"type": "array", "items": {"type": "object"}}}, "additionalProperties": false, "minProperties": 1},
+    "constraint": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["relation", "dynamic_limit", "allowed_values"]}, "operator": {"enum": ["gt", "ge", "lt", "le", "eq", "ne"]}, "other_command": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}, "offset": {"type": "number"}, "unit": {"type": "string"}, "values": {"type": "array"}, "description": {"type": "string"}}, "additionalProperties": true},
+    "bit_field": {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}, "access": {"enum": ["read_only", "write_only", "read_write"]}, "default": {"type": ["integer", "boolean", "string"]}, "fixed": {"type": ["integer", "boolean", "string"]}, "values": {"type": "object"}, "supported": {"type": "boolean"}, "source": {"type": "string"}}, "additionalProperties": true},
+    "block_transfer": {
+      "type": "object",
+      "required": ["content_bytes", "count_prefix_bytes", "transaction_payload_bytes"],
+      "properties": {
+        "content_bytes": {"type": "integer", "minimum": 1},
+        "count_prefix_bytes": {"const": 1},
+        "transaction_payload_bytes": {"type": "integer", "minimum": 2}
+      },
+      "additionalProperties": false
+    }
+  }
+}
