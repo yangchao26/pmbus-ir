@@ -1,7 +1,6 @@
 # EBDW025A0B Reference IR - OmniOn EBDW025A0B_DS Rev. 8.5
 # Published quick reference: page 34. Source conflicts are preserved.
-ir_version:
-"0.1"
+ir_version: "0.1"
 document:
   kind: "reference_implementation"
   completeness:
