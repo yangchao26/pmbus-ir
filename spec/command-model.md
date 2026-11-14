@@ -182,7 +182,8 @@ data:
   quantity: voltage
   unit: V
   range: {min: 9.5, max: 12.5}
-  resolution: 0.000244140625
+  encoding_resolution: 0.000244140625
+  published_resolution: 0.000244
 ```
 
 Bit fields live under `data.bits`, strings use `kind: string`, and vendor-specific packed payloads may use `kind: structured` with `fields`.
@@ -262,7 +263,7 @@ The companion JSON Schema enforces:
 7. mutual exclusion of `format_ref` and inline `format`;
 8. rejection of unknown top-level command fields.
 
-Semantic validation beyond JSON Schema will later check duplicate codes, command references, format references, ranges, cross-command inequalities, and future registry consistency.
+Semantic Validation v0.1 checks duplicate command codes, command and format references, ranges/defaults, cross-command relations, numeric encoding consistency, and block content/framing lengths. Future versions may extend these checks.
 
 ## QODN217A0B migration result
 
