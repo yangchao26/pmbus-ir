@@ -1,0 +1,1582 @@
+# EBDW025A0B Reference IR - OmniOn EBDW025A0B_DS Rev. 8.5
+# Published quick reference: page 34. Source conflicts are preserved.
+ir_version:
+"0.1"
+document:
+  kind: "reference_implementation"
+  completeness:
+    supported_commands: "complete_per_datasheet_quick_reference"
+    supported_command_count: 50
+    behavioral_details: "best_effort_from_datasheet"
+    undocumented_fields: "not_inferred"
+source:
+  title: "EBDW025A0B Barracuda Series DC-DC Converter Power Modules"
+  document_id: "EBDW025A0B_DS"
+  revision: "8.5"
+  year: 2023
+  filename: "EBDW025A0B__ETS0038380__ebdw025a0b_ds(2).pdf"
+  command_inventory_page: 34
+  command_detail_pages: "19-33"
+device:
+  manufacturer: "OmniOn Power"
+  model: "EBDW025A0B"
+  family: "Barracuda"
+  class: "isolated_dc_dc_power_module"
+  input_voltage_v:
+    min: 36
+    nominal: 48
+    max: 75
+  output_voltage_nominal_v: 12
+  output_current_rated_a: 25
+  output_power_rated_w: 300
+  options:
+    droop_parallel: "-P"
+    remote_on_off_logic:
+      - "positive"
+      - "negative"
+standards:
+  pmbus: "1.2"
+  command_support: "subset"
+  direct_data_format_supported: false
+transport:
+  interface: "PMBus_over_SMBus"
+  bus_frequency_khz:
+    - 100
+    - 400
+  clock_stretching:
+    supported: true
+    max_clock_low_period_ms: 35
+  pec:
+    master_to_module: "optional_checked_if_present"
+    module_to_master: "always_included_per_datasheet"
+  smbalert:
+    supported: true
+    ara_configurable: true
+    ara_config_command: "MFR_C1_C2_ARA_CONFIG"
+    default_alert_behavior: "retain_resistor_address"
+    clear_alert_command: "CLEAR_FAULTS"
+    ara_multi_device_limitation: "No bus contention arbitration; document recommends lowest resistor-selected address."
+addressing:
+  method: "two_resistor_programmed_octal_digits"
+  pins:
+    ADDR1: "higher_octal_digit"
+    ADDR0: "lower_octal_digit"
+  theoretical_address_count: 64
+  address_range_decimal:
+    min: 0
+    max: 63
+  reserved_addresses_decimal:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    - 40
+    - 44
+    - 45
+    - 55
+  resistors_kohm:
+    "0": 10
+    "1": 15.4
+    "2": 23.7
+    "3": 36.5
+    "4": 54.9
+    "5": 84.5
+    "6": 130
+    "7": 200
+  recommended_resistor_tolerance_percent: 1
+  logical_outputs: 1
+  page_command_documented: false
+data_formats:
+  vout_linear:
+    type: "vout_linear"
+    wire_bytes: 2
+    fixed_exponent: -12
+    exponent_source: "VOUT_MODE"
+    encoding_resolution: 0.000244140625
+  linear11:
+    type: "linear11"
+    wire_bytes: 2
+    exponent_policy: "fixed_per_command"
+  calibration_gain_unsigned16:
+    type: "unsigned16_fixed"
+    wire_bytes: 2
+    scale: 0.0001220703125
+    encoding_resolution: 0.0001220703125
+  calibration_offset_signed16:
+    type: "signed16_fixed"
+    wire_bytes: 2
+    fixed_exponent: -12
+    encoding_resolution: 0.000244140625
+  packed_bcd_4digits:
+    type: "packed_bcd"
+    wire_bytes: 2
+    digits: 4
+commands:
+  OPERATION:
+    code: 0x01
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "operation"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "4":
+          name: "MARGIN_LOW_SELECT"
+        "5":
+          name: "MARGIN_HIGH_SELECT"
+        "7":
+          name: "ON"
+    default:
+      raw: "0x80"
+    source:
+      quick_reference_page: 34
+      detail_page: 24
+  ON_OFF_CONFIG:
+    code: 0x02
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "operation"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "0":
+          name: "CPA"
+        "1":
+          name: "POLARITY"
+        "2":
+          name: "CPR"
+        "3":
+          name: "CMD"
+        "4":
+          name: "PU"
+    default:
+      cases:
+        -
+          when:
+            logic: "negative"
+          raw: "0x1D"
+        -
+          when:
+            logic: "positive"
+          raw: "0x1F"
+    source:
+      quick_reference_page: 34
+      detail_page: 24
+  CLEAR_FAULTS:
+    code: 0x03
+    origin: "standard"
+    support: "full"
+    roles:
+      - "status"
+      - "operation"
+    access: "execute"
+    transaction:
+      write: "send_byte"
+    data:
+      kind: "none"
+      bytes: 0
+    source:
+      quick_reference_page: 34
+      detail_page: 24
+  STORE_DEFAULT_ALL:
+    code: 0x11
+    origin: "standard"
+    support: "full"
+    roles:
+      - "persistence"
+    access: "execute"
+    transaction:
+      write: "send_byte"
+    data:
+      kind: "none"
+      bytes: 0
+    source:
+      quick_reference_page: 34
+      detail_page: 24
+    timing:
+      execution_time_ms:
+        max: 500
+      block_further_commands_until_complete: true
+  RESTORE_DEFAULT_ALL:
+    code: 0x12
+    origin: "standard"
+    support: "full"
+    roles:
+      - "persistence"
+    access: "execute"
+    transaction:
+      write: "send_byte"
+    data:
+      kind: "none"
+      bytes: 0
+    source:
+      quick_reference_page: 34
+      detail_page: 24
+    timing:
+      execution_time_ms:
+        max: 200
+      block_further_commands_until_complete: true
+  VOUT_MODE:
+    code: 0x20
+    origin: "standard"
+    support: "full"
+    roles:
+      - "capability"
+      - "configuration"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "structured"
+      bytes: 1
+    default:
+      raw: "0x14"
+    source:
+      quick_reference_page: 34
+      detail_page: 24
+  VOUT_COMMAND:
+    code: 0x21
+    origin: "standard"
+    support: "conditional"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 5
+        max: 13.2
+      unit: "V"
+      quantity: "voltage"
+      published_resolution: 0.000244
+    default:
+      value: 12
+    conditions:
+      -
+        kind: "pin_mux_conflict"
+        command: "MFR_C1_C2_ARA_CONFIG"
+        function: "TRIM"
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  VOUT_CAL_OFFSET:
+    code: 0x23
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      range:
+        min: -1
+        max: 1
+      unit: "V"
+      quantity: "voltage"
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+      conflict: "VOUT linear (unsigned) format listed despite negative -1 V range; exact signed encoding unresolved."
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  VOUT_MARGIN_HIGH:
+    code: 0x25
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 5
+        max: 13.2
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 12.6
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+    constraints:
+      -
+        kind: "relation"
+        operator: "gt"
+        other_command: "VOUT_MARGIN_LOW"
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  VOUT_MARGIN_LOW:
+    code: 0x26
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 5
+        max: 13.2
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 11.4
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+    constraints:
+      -
+        kind: "relation"
+        operator: "lt"
+        other_command: "VOUT_MARGIN_HIGH"
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  VOUT_DROOP:
+    code: 0x28
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 0
+        max: 50
+      unit: "mV_per_A"
+      quantity: "droop_slope"
+    default:
+      cases:
+        -
+          when:
+            option_any:
+              - "-P"
+          value: 15
+        -
+          when:
+            option_none:
+              - "-P"
+          value: 0
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+  VIN_ON:
+    code: 0x35
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -3
+      encoding_resolution: 0.125
+      range:
+        min: 32
+        max: 46
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 35
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+    constraints:
+      -
+        kind: "relation"
+        operator: "ge"
+        other_command: "VIN_OFF"
+        offset: 2
+        unit: "V"
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  VIN_OFF:
+    code: 0x36
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -3
+      encoding_resolution: 0.125
+      range:
+        min: 32
+        max: 46
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 33
+    source:
+      quick_reference_page: 34
+      detail_page: 25
+    constraints:
+      -
+        kind: "relation"
+        operator: "le"
+        other_command: "VIN_ON"
+        offset: -2
+        unit: "V"
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  VOUT_OV_FAULT_LIMIT:
+    code: 0x40
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+      - "protection_limit"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 8
+        max: 15.99
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 15.99
+    source:
+      quick_reference_page: 34
+      detail_page: 26
+    constraints:
+      -
+        kind: "relation"
+        operator: "gt"
+        other_command: "VOUT_COMMAND"
+  VOUT_OV_FAULT_RESPONSE:
+    code: 0x41
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "configuration"
+      - "protection_response"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+    default:
+      raw: "0xB8"
+    source:
+      quick_reference_page: 34
+      detail_page: 26
+  IOUT_OC_FAULT_LIMIT:
+    code: 0x46
+    origin: "standard"
+    support: "full"
+    roles:
+      - "protection_limit"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -4
+      encoding_resolution: 0.0625
+      range:
+        min: 16
+        max: 40
+      unit: "A"
+      quantity: "current"
+    default:
+      value: 30
+    source:
+      quick_reference_page: 34
+      detail_page: 26
+      conflict: "Detailed command and quick reference say read-only; introductory feature text says reconfigurable."
+    constraints:
+      -
+        kind: "relation"
+        operator: "gt"
+        other_command: "IOUT_OC_WARN_LIMIT"
+  IOUT_OC_FAULT_RESPONSE:
+    code: 0x47
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "configuration"
+      - "protection_response"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+    default:
+      raw: "0xF8"
+    source:
+      quick_reference_page: 34
+      detail_page: 26
+  IOUT_OC_WARN_LIMIT:
+    code: 0x4A
+    origin: "standard"
+    support: "full"
+    roles:
+      - "protection_limit"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -4
+      encoding_resolution: 0.0625
+      range:
+        min: 8
+        max: 30
+      unit: "A"
+      quantity: "current"
+    default:
+      value: 27.5
+    source:
+      quick_reference_page: 34
+      detail_page: 27
+      conflict: "Detailed command and quick reference say read-only; introductory feature text says reconfigurable."
+    constraints:
+      -
+        kind: "relation"
+        operator: "lt"
+        other_command: "IOUT_OC_FAULT_LIMIT"
+  OT_FAULT_LIMIT:
+    code: 0x4F
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+      - "protection_limit"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -2
+      encoding_resolution: 0.25
+      range:
+        min: 25
+        max: 140
+      unit: "degC"
+      quantity: "temperature"
+    default:
+      value: 135
+    source:
+      quick_reference_page: 34
+      detail_page: 27
+    constraints:
+      -
+        kind: "relation"
+        operator: "gt"
+        other_command: "OT_WARN_LIMIT"
+  OT_FAULT_RESPONSE:
+    code: 0x50
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "configuration"
+      - "protection_response"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+    default:
+      raw: "0xB8"
+    source:
+      quick_reference_page: 34
+      detail_page: 27
+  OT_WARN_LIMIT:
+    code: 0x51
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+      - "protection_limit"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -2
+      encoding_resolution: 0.25
+      range:
+        min: 25
+        max: 125
+      unit: "degC"
+      quantity: "temperature"
+    default:
+      value: 125
+    source:
+      quick_reference_page: 34
+      detail_page: 27
+    constraints:
+      -
+        kind: "relation"
+        operator: "lt"
+        other_command: "OT_FAULT_LIMIT"
+  VIN_OV_FAULT_LIMIT:
+    code: 0x55
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+      - "protection_limit"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -3
+      encoding_resolution: 0.125
+      range:
+        min: 48
+        max: 90
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 85
+    source:
+      quick_reference_page: 34
+      detail_page: 27
+  VIN_OV_FAULT_RESPONSE:
+    code: 0x56
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "configuration"
+      - "protection_response"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+    default:
+      raw: "0xC0"
+    source:
+      quick_reference_page: 34
+      detail_page: 28
+  POWER_GOOD_ON:
+    code: 0x5E
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 4.8
+        max: 13.2
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 10.1
+    source:
+      quick_reference_page: 34
+      detail_page: 28
+    constraints:
+      -
+        kind: "relation"
+        operator: "ge"
+        other_command: "POWER_GOOD_OFF"
+        offset: 1.6
+        unit: "V"
+  POWER_GOOD_OFF:
+    code: 0x5F
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 3
+        max: 13.2
+      unit: "V"
+      quantity: "voltage"
+    default:
+      value: 8.5
+    source:
+      quick_reference_page: 34
+      detail_page: 28
+    constraints:
+      -
+        kind: "relation"
+        operator: "le"
+        other_command: "POWER_GOOD_ON"
+        offset: -1.6
+        unit: "V"
+  TON_DELAY:
+    code: 0x60
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -1
+      encoding_resolution: 0.5
+      range:
+        min: 40
+        max: 500
+      unit: "ms"
+      quantity: "time"
+      published_resolution: 0.5
+    default:
+      value: 40
+    source:
+      quick_reference_page: 34
+      detail_page: 28
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  TON_RISE:
+    code: 0x61
+    origin: "standard"
+    support: "full"
+    roles:
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -1
+      encoding_resolution: 0.5
+      range:
+        min: 40
+        max: 500
+      unit: "ms"
+      quantity: "time"
+      published_resolution: 0.5
+    default:
+      value: 40
+    source:
+      quick_reference_page: 34
+      detail_page: 28
+    persistence:
+      mode: "nonvolatile_via_command"
+      commit_command: "STORE_DEFAULT_ALL"
+      restore_command: "RESTORE_DEFAULT_ALL"
+  STATUS_WORD:
+    code: 0x79
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "status"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "bit_field"
+      bytes: 2
+      bits:
+        "1":
+          name: "CML"
+        "2":
+          name: "TEMPERATURE"
+        "3":
+          name: "VIN_UV_FAULT"
+        "4":
+          name: "IOUT_OC_FAULT"
+        "5":
+          name: "VOUT_OV_FAULT"
+        "6":
+          name: "OUTPUT_OFF"
+        "11":
+          name: "POWER_GOOD_NEGATED"
+        "13":
+          name: "INPUT_FAULT"
+        "14":
+          name: "IOUT_FAULT_OR_WARNING"
+        "15":
+          name: "VOUT_FAULT"
+    source:
+      quick_reference_page: 34
+      detail_page: 29
+  STATUS_VOUT:
+    code: 0x7A
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "status"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "7":
+          name: "VOUT_OV_FAULT"
+    source:
+      quick_reference_page: 34
+      detail_page: 29
+  STATUS_IOUT:
+    code: 0x7B
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "status"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "5":
+          name: "IOUT_OC_WARNING"
+        "7":
+          name: "IOUT_OC_FAULT"
+    source:
+      quick_reference_page: 34
+      detail_page: 29
+  STATUS_INPUT:
+    code: 0x7C
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "status"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "3":
+          name: "LOW_INPUT_VOLTAGE"
+        "4":
+          name: "VIN_UV_FAULT"
+        "7":
+          name: "VIN_OV_FAULT"
+    source:
+      quick_reference_page: 34
+      detail_page: 29
+  STATUS_TEMPERATURE:
+    code: 0x7D
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "status"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "6":
+          name: "OT_WARNING"
+        "7":
+          name: "OT_FAULT"
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+  STATUS_CML:
+    code: 0x7E
+    origin: "standard"
+    support: "partial"
+    roles:
+      - "status"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "5":
+          name: "PEC_FAILED"
+        "6":
+          name: "INVALID_DATA"
+        "7":
+          name: "INVALID_COMMAND"
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+  READ_VIN:
+    code: 0x88
+    origin: "standard"
+    support: "full"
+    roles:
+      - "telemetry"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -3
+      encoding_resolution: 0.125
+      range:
+        min: 0
+        max: 127.875
+      unit: "V"
+      quantity: "voltage"
+      published_resolution: 0.125
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+  READ_VOUT:
+    code: 0x8B
+    origin: "standard"
+    support: "full"
+    roles:
+      - "telemetry"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "vout_linear"
+      range:
+        min: 0
+        max: 15.9997
+      unit: "V"
+      quantity: "voltage"
+      published_resolution: 0.000244
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+  READ_IOUT:
+    code: 0x8C
+    origin: "standard"
+    support: "full"
+    roles:
+      - "telemetry"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -4
+      encoding_resolution: 0.0625
+      range:
+        min: 0.56
+        max: 63.9375
+      unit: "A"
+      quantity: "current"
+      published_resolution: 0.19
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+    behavior:
+      sinking_current_reported_as_a: 0
+      sensor: "filter_inductor_winding_resistance"
+      calibration_offset_command: "MFR_IOUT_CAL_OFFSET"
+      calibration_gain_command: "MFR_IOUT_CAL_GAIN"
+  READ_TEMPERATURE_1:
+    code: 0x8D
+    origin: "standard"
+    support: "full"
+    roles:
+      - "telemetry"
+    access: "read_only"
+    transaction:
+      read: "read_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -2
+      encoding_resolution: 0.25
+      unit: "degC"
+      quantity: "temperature"
+      published_resolution: 0.25
+    aliases:
+      - "READ_TEMP1"
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+    behavior:
+      sensor_location: "near_TH1_hotspot"
+      not_ambient: true
+  PMBUS_REVISION:
+    code: 0x98
+    origin: "standard"
+    support: "full"
+    roles:
+      - "capability"
+    access: "read_only"
+    transaction:
+      read: "read_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+    default:
+      value: "1.2"
+    source:
+      quick_reference_page: 34
+      detail_page: 34
+  MFR_DEVICE_TYPE:
+    code: 0xD0
+    origin: "manufacturer_specific"
+    support: "partial"
+    roles:
+      - "manufacturer_control"
+      - "identification"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "structured"
+      bytes: 2
+    default:
+      raw: "0x008A"
+    behavior:
+      module_designation: "EBDW025A0B"
+      write_protect_enable_bit: 1
+    source:
+      quick_reference_page: 34
+      detail_page: 30
+  MFR_VOUT_READ_CAL_GAIN:
+    code: 0xD1
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "calibration_gain_unsigned16"
+      encoding_resolution: 0.0001220703125
+      range:
+        min: 0.7999267578125
+        max: 1.199951171875
+      quantity: "calibration_gain"
+    default:
+      raw: "0x2000"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  MFR_VOUT_READ_CAL_OFF:
+    code: 0xD2
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "calibration_offset_signed16"
+      encoding_resolution: 0.000244140625
+      quantity: "calibration_offset"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  MFR_VIN_READ_CAL_GAIN:
+    code: 0xD3
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "calibration_gain_unsigned16"
+      encoding_resolution: 0.0001220703125
+      range:
+        min: 0.7999267578125
+        max: 1.199951171875
+      quantity: "calibration_gain"
+    default:
+      raw: "0x2000"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  MFR_VIN_READ_CAL_OFF:
+    code: 0xD4
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -3
+      encoding_resolution: 0.125
+      quantity: "voltage"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  MFR_IOUT_CAL_GAIN:
+    code: 0xD6
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format_ref: "calibration_gain_unsigned16"
+      encoding_resolution: 0.0001220703125
+      range:
+        min: 0.7999267578125
+        max: 1.199951171875
+      quantity: "calibration_gain"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  MFR_IOUT_CAL_OFFSET:
+    code: 0xD7
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_word"
+      write: "write_word"
+    data:
+      kind: "scalar"
+      bytes: 2
+      format:
+        type: "linear11"
+        fixed_exponent: -4
+      encoding_resolution: 0.0625
+      quantity: "current"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+  MFR_FW_REV:
+    code: 0xDB
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "identification"
+    access: "read_only"
+    transaction:
+      read: "unknown"
+    data:
+      kind: "structured"
+      bytes: 2
+      format_ref: "packed_bcd_4digits"
+      fields:
+        major:
+          digits: 1
+        minor:
+          digits: 1
+        build:
+          digits: 2
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+      conflict: "2-byte four-digit BCD value but quick table says Read byte."
+  MFR_C1_C2_ARA_CONFIG:
+    code: 0xE0
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "0":
+          name: "PIN_MAP_0"
+        "1":
+          name: "PIN_MAP_1"
+        "2":
+          name: "PIN_MAP_2"
+        "3":
+          name: "PIN_MAP_3"
+        "4":
+          name: "ARA_ENABLED"
+    default:
+      raw: "0x00"
+    behavior:
+      bit4: "ARA_enable"
+      bits_3_to_0: "T_C1_C2_pin_assignment"
+      with_P_option: "only_default_pin_assignment_allowed"
+    source:
+      quick_reference_page: 34
+      detail_page: 31
+      prose_alias: "MFR_CPIN_ARA_CONFIG; do not treat as independent command code"
+  MFR_C2_LOGIC:
+    code: 0xE1
+    origin: "manufacturer_specific"
+    support: "partial"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "0":
+          name: "SECONDARY_ON_OFF_POLARITY"
+        "1":
+          name: "SECONDARY_ON_OFF_AND"
+    default:
+      raw: "0x00"
+    source:
+      quick_reference_page: 34
+      detail_page: 32
+  MFR_PGOOD_POLARITY:
+    code: 0xE2
+    origin: "manufacturer_specific"
+    support: "partial"
+    roles:
+      - "manufacturer_control"
+      - "configuration"
+    access: "read_write"
+    transaction:
+      read: "read_byte"
+      write: "write_byte"
+    data:
+      kind: "bit_field"
+      bytes: 1
+      bits:
+        "0":
+          name: "PGOOD_POLARITY"
+    default:
+      raw: "0x01"
+    source:
+      quick_reference_page: 34
+      detail_page: 33
+  MFR_MOD_DATE_LOC_SN:
+    code: 0xF0
+    origin: "manufacturer_specific"
+    support: "full"
+    roles:
+      - "manufacturer_control"
+      - "identification"
+    access: "read_write"
+    transaction:
+      read: "read_block"
+      write: "write_block"
+    data:
+      kind: "string"
+      bytes: 12
+      encoding: "8_bit_character"
+      block:
+        content_bytes: 12
+        count_prefix_bytes: 1
+        transaction_payload_bytes: 13
+    default:
+      value: "YYLLWW123456"
+    source:
+      quick_reference_page: 34
+      detail_page: 33
+      interpretation: "12 content bytes per detailed description; one additional SMBus count prefix."
+      quick_reference_data_bytes: 12
+    conditions:
+      -
+        kind: "manufacturer_write_protect_gate"
+        command: "MFR_DEVICE_TYPE"
+        bit: "WPE"
+telemetry:
+  input_voltage:
+    command: "READ_VIN"
+    published_resolution_v: 0.125
+  output_voltage:
+    command: "READ_VOUT"
+    published_resolution_v: 0.000244
+  output_current:
+    command: "READ_IOUT"
+    published_resolution_a: 0.19
+    reporting_range_a:
+      min: 0.56
+      max: 63.9375
+  temperature:
+    command: "READ_TEMPERATURE_1"
+    published_resolution_degC: 0.25
+configuration:
+  output_voltage:
+    command: "VOUT_COMMAND"
+    range_v:
+      min: 5
+      max: 13.2
+    trim_mux_conflict: true
+  input_uvlo:
+    on_command: "VIN_ON"
+    off_command: "VIN_OFF"
+    hysteresis_min_v: 2
+  power_good:
+    on_command: "POWER_GOOD_ON"
+    off_command: "POWER_GOOD_OFF"
+    hysteresis_min_v: 1.6
+  pin_mux:
+    command: "MFR_C1_C2_ARA_CONFIG"
+    secondary_control_command: "MFR_C2_LOGIC"
+status:
+  summary_command: "STATUS_WORD"
+  clear_command: "CLEAR_FAULTS"
+  detail_commands:
+    - "STATUS_VOUT"
+    - "STATUS_IOUT"
+    - "STATUS_INPUT"
+    - "STATUS_TEMPERATURE"
+    - "STATUS_CML"
+faults:
+  output_overvoltage:
+    limit_command: "VOUT_OV_FAULT_LIMIT"
+    response_command: "VOUT_OV_FAULT_RESPONSE"
+  output_overcurrent:
+    limit_command: "IOUT_OC_FAULT_LIMIT"
+    warning_command: "IOUT_OC_WARN_LIMIT"
+    response_command: "IOUT_OC_FAULT_RESPONSE"
+  overtemperature:
+    limit_command: "OT_FAULT_LIMIT"
+    warning_command: "OT_WARN_LIMIT"
+    response_command: "OT_FAULT_RESPONSE"
+  input_overvoltage:
+    limit_command: "VIN_OV_FAULT_LIMIT"
+    response_command: "VIN_OV_FAULT_RESPONSE"
+persistence:
+  storage: "EEPROM"
+  automatic_save: false
+  commit_command: "STORE_DEFAULT_ALL"
+  restore_command: "RESTORE_DEFAULT_ALL"
+  commit_max_ms: 500
+  restore_max_ms: 200
+behavior:
+  primary_on_off_pin_required: true
+  configurable_secondary_control_pins:
+    - "T/C1"
+    - "C2"
+  pin_configuration_command: "MFR_C1_C2_ARA_CONFIG"
+  on_off_logic_command: "MFR_C2_LOGIC"
+  pGood:
+    pin: "C2"
+    polarity_command: "MFR_PGOOD_POLARITY"
+    pullup_ohm: 10000
+    pullup_v: 3.3
+  passive_droop_share_option: "-P"
+extensions:
+  source_prose_command_names_without_independently_published_codes:
+    - "MFR_CPIN_ARA_CONFIG"
+    - "MFR_CPIN_ON_OFF_CONFIG"
+source_conflicts:
+  iout_oc_limit_access:
+    statements:
+      - "Feature narrative says IOUT fault/warning limits reconfigurable."
+      - "Detailed and quick-reference command sections label them Read-only."
+    resolution: "modeled_read_only_pending_hardware_confirmation"
+  mfr_fw_rev_transfer:
+    statements:
+      - "2-byte packed BCD value detailed."
+      - "Quick-reference transfer column says Read byte."
+    resolution: "transaction_read_unknown"
+  vout_cal_offset_encoding:
+    statements:
+      - "VOUT_CAL_OFFSET permits -1 to +1 V."
+      - "Quick reference labels it VOUT linear (unsigned 16-bit mantissa)."
+    resolution: "numeric_format_unspecified"
+  mfr_block_length:
+    statements:
+      - "Detailed description says read/write 12-byte block."
+      - "Quick table lists DATA BYTES=12 and R/W block."
+    resolution: "12_semantic_content_bytes_count_prefix_separate"
+  calibration_name_variants:
+    statements:
+      - "Prose uses names ending _OFFSET."
+      - "Quick table uses MFR_VOUT_READ_CAL_OFF and MFR_VIN_READ_CAL_OFF for 0xD2/0xD4."
+    resolution: "canonical_quick_reference_name"
+  mfr_cpin_name_variants:
+    statements:
+      - "Description refers to MFR_CPIN_ARA_CONFIG and MFR_CPIN_ON_OFF_CONFIG."
+      - "Quick reference lists MFR_C1_C2_ARA_CONFIG, MFR_C2_LOGIC; no additional codes."
+    resolution: "retain_as_source_only"
